@@ -1,0 +1,2135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ECF0F4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F151C" media="(prefers-color-scheme: dark)">
+<title>Champions Stat Trainer</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Stat Trainer">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  color-scheme:light;
+  --paper:#ECF0F4; --card:#FFFFFF; --sunk:#F3F6F9; --ink:#17202B; --ink-2:#4E5A68; --ink-3:#7C8794;
+  --rule:#D2D9E1; --rule-2:#E4E9EE; --signal:#CC3A1F; --signal-2:#AE2F17; --focus:#2563EB;
+  --hp:#E5534B; --atk:#EC8A39; --def:#CFA514; --spa:#4A7DDF; --spd:#36A064; --spe:#D23F7E;
+  --good:#21915A; --mid:#C2850E; --bad:#CC3A1F;
+  --shadow:0 1px 2px rgba(23,32,43,.06),0 6px 18px rgba(23,32,43,.05);
+  --heat-l:47%;
+  --font:'Barlow',system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --cond:'Barlow Condensed','Arial Narrow','Roboto Condensed',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --paper:#0F151C; --card:#17202A; --sunk:#111922; --ink:#E7ECF1; --ink-2:#A3AFBC; --ink-3:#77838F;
+  --rule:#2B3743; --rule-2:#212B36; --signal:#F0583A; --signal-2:#FF6E50; --focus:#7AA7FF;
+  --hp:#F06A62; --atk:#F39B52; --def:#E6C13A; --spa:#6D97F0; --spd:#55BE80; --spe:#EE5E9B;
+  --good:#3DBA76; --mid:#E0A22B; --bad:#F0583A; --shadow:none; --heat-l:58%;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0F151C; --card:#17202A; --sunk:#111922; --ink:#E7ECF1; --ink-2:#A3AFBC; --ink-3:#77838F;
+  --rule:#2B3743; --rule-2:#212B36; --signal:#F0583A; --signal-2:#FF6E50; --focus:#7AA7FF;
+  --hp:#F06A62; --atk:#F39B52; --def:#E6C13A; --spa:#6D97F0; --spd:#55BE80; --spe:#EE5E9B;
+  --good:#3DBA76; --mid:#E0A22B; --bad:#F0583A; --shadow:none; --heat-l:58%;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+img{max-width:100%}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- shell ---------- */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;padding:26px 18px 20px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:26px}
+.brand{padding:0 8px}
+.brand .word{font:800 30px/.92 var(--cond);letter-spacing:-.01em;margin:0}
+.brand .sub{font-size:13px;color:var(--ink-2);margin-top:8px;line-height:1.35}
+.stripe{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-top:12px}
+.stripe span{flex:1}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav button{position:relative;display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:var(--ink-2);font-weight:600;font-size:16px;cursor:pointer;text-align:left}
+.nav button:hover{background:var(--rule-2);color:var(--ink)}
+.nav button[aria-current="page"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.nav button[aria-current="page"]::before{content:'';position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:2px;background:var(--signal)}
+.nav .count{font-size:13px;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.rail-foot{margin-top:auto;padding:0 8px;font-size:13px;color:var(--ink-3);display:flex;flex-direction:column;gap:8px}
+.savestate{display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--good);flex:none}
+.dot.warn{background:var(--mid)}
+main{padding:34px clamp(16px,4vw,52px) 110px;min-width:0}
+.panel-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
+h1{font:800 46px/1 var(--cond);margin:0;letter-spacing:-.01em}
+h2{font:800 26px/1.1 var(--cond);margin:0 0 12px}
+h3{font:700 20px/1.15 var(--cond);margin:0 0 8px}
+.lede{margin:8px 0 0;color:var(--ink-2);max-width:70ch}
+.muted{color:var(--ink-2)}
+.small{font-size:14px}
+a{color:var(--focus)}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));border-right:0;border-top:1px solid var(--rule);background:var(--card);z-index:40;gap:0}
+  .brand,.rail-foot{display:none}
+  .nav{flex-direction:row;width:100%}
+  .nav button{flex:1;flex-direction:column;justify-content:center;gap:0;font-size:13px;padding:8px 2px;text-align:center}
+  .nav button[aria-current="page"]{box-shadow:none;background:var(--rule-2)}
+  .nav button[aria-current="page"]::before{left:30%;right:30%;top:auto;bottom:2px;width:auto;height:3px}
+  .nav .count{font-size:11px}
+  main{padding:22px 14px 120px}
+  h1{font-size:38px}
+}
+
+/* ---------- controls ---------- */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.toolbar .grow{flex:1 1 220px}
+.seg{display:inline-flex;flex-wrap:wrap;background:var(--rule-2);border-radius:11px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:7px 13px;border-radius:8px;font-weight:600;font-size:14px;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border-radius:10px;border:1px solid var(--rule);background:var(--card);color:var(--ink);font-weight:600;font-size:15px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn:hover{border-color:var(--ink-3)}
+.btn.primary{background:var(--signal);border-color:var(--signal);color:#fff}
+.btn.primary:hover{background:var(--signal-2);border-color:var(--signal-2)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--ink-2)}
+.btn.ghost:hover{color:var(--ink);background:var(--rule-2)}
+.btn.danger{color:var(--bad)}
+.btn.sm{min-height:32px;padding:4px 11px;font-size:14px;border-radius:8px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+input[type=search],input[type=text],input[type=number],select,textarea{background:var(--card);border:1px solid var(--rule);border-radius:10px;padding:8px 12px;min-height:40px;font-size:15px}
+textarea{width:100%;min-height:180px;font:500 13px/1.45 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical}
+input[type=search]{width:100%}
+label.inline{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:var(--ink-2)}
+.section{margin-top:30px}
+.box{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:18px 20px}
+.empty{background:var(--card);border:1px dashed var(--rule);border-radius:14px;padding:34px 24px;text-align:center}
+.empty p{margin:6px auto 16px;max-width:52ch;color:var(--ink-2)}
+
+/* ---------- types & images ---------- */
+.types{display:flex;gap:4px;flex-wrap:wrap}
+.type{font-weight:700;font-size:12px;line-height:1;padding:4px 7px 4px;border-radius:5px;background:var(--t);color:var(--tc,#fff)}
+.mega-tag{display:inline-block;font-weight:700;font-size:12px;line-height:1;padding:3px 6px;border-radius:5px;border:1px solid var(--ink-3);color:var(--ink-2);vertical-align:2px}
+.pimg{position:relative;aspect-ratio:1;border-radius:12px;background:var(--sunk);overflow:hidden;display:grid;place-items:center;flex:none}
+.pimg img{position:absolute;inset:6%;width:88%;height:88%;object-fit:contain;z-index:1}
+.pimg .ph{display:none;place-items:center;width:100%;height:100%;font:800 28px/1 var(--cond);color:#fff;background:linear-gradient(135deg,var(--t1),var(--t2))}
+.pimg.noimg .ph{display:grid}
+.pimg.hidden img,.pimg.hidden .ph{visibility:hidden}
+
+/* ---------- usage list ---------- */
+.ulist{background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+.urow{display:grid;grid-template-columns:52px 52px minmax(0,1fr) 84px 84px 168px;align-items:center;gap:14px;padding:8px 16px;border-top:1px solid var(--rule-2)}
+.urow.head{border-top:0;padding-top:12px;padding-bottom:10px;font-size:13px;font-weight:600;color:var(--ink-3);background:var(--sunk)}
+.urow .rank{font:800 26px/1 var(--cond);color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:right}
+.urow .pimg{width:52px;height:52px;border-radius:10px}
+.urow .pimg .ph{font-size:16px}
+.uname{font:700 20px/1.1 var(--cond)}
+.umeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px;font-size:13px;color:var(--ink-2)}
+.unum{font:700 22px/1 var(--cond);font-variant-numeric:tabular-nums;text-align:right}
+.unum.spe{color:var(--spe)}
+.m-only{display:none}
+.umeta .m-only b{color:var(--spe);font:700 15px/1 var(--cond)}
+.uact{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.status{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.status.batch{background:color-mix(in srgb,var(--signal) 14%,transparent);color:var(--signal)}
+.status.learned{background:color-mix(in srgb,var(--good) 14%,transparent);color:var(--good)}
+@media (max-width:980px){.urow{grid-template-columns:40px 48px minmax(0,1fr) 64px 132px}.urow .c-lv{display:none}}
+@media (max-width:560px){.urow{grid-template-columns:30px 44px minmax(0,1fr) 92px;gap:10px;padding:8px 10px}.urow .c-base{display:none}.umeta .m-only{display:inline}.urow .rank{font-size:20px}.urow .status{display:none}}
+
+.sticky{position:sticky;bottom:16px;z-index:20;margin-top:16px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;background:var(--ink);color:var(--paper);padding:12px 14px 12px 18px;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.sticky .btn{border-color:transparent}
+.sticky .btn.ghost{color:var(--paper)}
+.sticky .btn.ghost:hover{background:rgba(255,255,255,.12)}
+@media (max-width:860px){.sticky{bottom:86px}}
+
+/* ---------- batch tiles ---------- */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:10px}
+.tile{position:relative;background:var(--card);border:1px solid var(--rule);border-radius:12px;padding:10px 10px 12px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center}
+.tile:hover{border-color:var(--ink-3)}
+.tile[aria-pressed="true"]{border-color:var(--signal);box-shadow:inset 0 0 0 2px var(--signal)}
+.tile .pimg{width:86px;height:86px}
+.tile .tn{font:700 17px/1.1 var(--cond)}
+.tile .tr{font-size:12px;color:var(--ink-3)}
+.tile .tick{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid var(--rule);display:grid;place-items:center;background:var(--card)}
+.tile[aria-pressed="true"] .tick{background:var(--signal);border-color:var(--signal)}
+.tile .tick svg{width:12px;height:12px;opacity:0}
+.tile[aria-pressed="true"] .tick svg{opacity:1}
+.tile .tlabel{position:absolute;top:9px;left:9px;font-size:11px;font-weight:700;color:var(--good)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:3px 12px 3px 3px;border-radius:999px;background:var(--sunk);border:1px solid var(--rule-2);font-weight:600;font-size:14px}
+.chip .pimg{width:30px;height:30px;border-radius:50%}
+.chip .pimg .ph{font-size:11px}
+
+/* ---------- pokemon cards ---------- */
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:1200px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.grid{grid-template-columns:1fr}}
+.pcard{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:12px;cursor:pointer;text-align:left;transition:border-color .15s}
+.pcard:hover{border-color:var(--ink-3)}
+.pcard-top{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;align-items:center}
+.pcard .pimg{width:120px;height:120px}
+.pmeta{min-width:0;display:flex;flex-direction:column;gap:5px}
+.prank{font-size:13px;font-weight:600;color:var(--ink-3)}
+.pname{font:800 25px/1 var(--cond);overflow-wrap:anywhere}
+.spe-big{display:flex;align-items:baseline;gap:7px;margin-top:2px}
+.spe-big b{font:800 42px/.9 var(--cond);color:var(--spe);font-variant-numeric:tabular-nums}
+.spe-big span{font-size:13px;font-weight:600;color:var(--ink-2);line-height:1.15}
+.pnote{font-size:13px;color:var(--ink-2);margin:-2px 0 -4px}
+.heat-legend{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:-8px 0 16px;font-size:13px;color:var(--ink-2)}
+.heat-bar{width:140px;height:8px;border-radius:4px}
+.heat-ticks{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.heat-ticks i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-left:6px}
+.unum small{display:block;font:600 12px/1.2 var(--font);color:var(--ink-3);margin-top:3px}
+.pfoot{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink-2);border-top:1px solid var(--rule-2);padding-top:9px}
+
+/* ---------- stat bars ---------- */
+.bars{display:grid;grid-template-columns:auto minmax(0,1fr) auto;column-gap:10px;row-gap:6px;align-items:center}
+.bars .k{font-size:13px;font-weight:700;color:var(--ink-2);min-width:30px}
+.bars .track{position:relative;height:10px;border-radius:5px;background:var(--rule-2);overflow:hidden}
+.bars .track::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),color-mix(in srgb,var(--card) 70%,transparent) calc(25% - 1px) 25%);pointer-events:none}
+.bars.has-range{grid-template-columns:auto minmax(0,1fr) auto auto}
+.bars .band{position:absolute;top:0;bottom:0;border-radius:5px;background:color-mix(in srgb,var(--c) 30%,transparent)}
+.bars .rg{font-size:12px;font-weight:600;color:var(--ink-3);font-variant-numeric:tabular-nums;text-align:right;min-width:52px;white-space:nowrap}
+.bars .fill{position:relative;z-index:1;display:block;height:100%;border-radius:5px;background:var(--c);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.bars .v{font:700 18px/1 var(--cond);font-variant-numeric:tabular-nums;min-width:32px;text-align:right}
+.bars .is-spe .k,.bars .is-spe.v{color:var(--spe)}
+.bars.big{row-gap:10px;column-gap:14px}
+.bars.big .k{font-size:15px;min-width:40px}
+.bars.big .track{height:18px;border-radius:9px}
+.bars.big .fill{border-radius:9px}
+.bars.big .v{font-size:30px;min-width:48px}
+
+/* ---------- train ---------- */
+.trainbar{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;margin-bottom:20px}
+.cgroup{display:flex;flex-direction:column;gap:5px;min-width:0;max-width:100%}
+.cgroup .label{font-size:13px;font-weight:600;color:var(--ink-3);padding-left:2px}
+.ladder{background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+.lrow{display:grid;grid-template-columns:70px minmax(0,1fr);gap:14px;align-items:center;padding:8px 16px;border-top:1px solid var(--rule-2)}
+.lrow:first-child{border-top:0}
+.lval{font:800 30px/1 var(--cond);color:var(--spe);font-variant-numeric:tabular-nums;text-align:right}
+.lchip{display:inline-flex;align-items:center;gap:8px;padding:3px 12px 3px 3px;border-radius:999px;background:var(--sunk);border:1px solid var(--rule-2);font-weight:600;font-size:14px;cursor:pointer}
+.lchip:hover{border-color:var(--ink-3)}
+.lchip .pimg{width:32px;height:32px;border-radius:50%}
+.lchip .pimg .ph{font-size:11px}
+.lchip small{color:var(--ink-3);font-weight:600}
+
+.quiz{max-width:780px;margin:0 auto}
+.qcard{background:var(--card);border:1px solid var(--rule);border-radius:20px;padding:22px 26px 26px;box-shadow:var(--shadow)}
+.qhead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;color:var(--ink-2);font-size:14px;font-weight:600}
+.qprog{height:6px;background:var(--rule-2);border-radius:3px;overflow:hidden;margin:10px 0 20px}
+.qprog i{display:block;height:100%;background:var(--ink);border-radius:3px;transition:width .3s}
+.qtitle{font:800 30px/1.05 var(--cond);margin:0 0 6px}
+.qnote{color:var(--ink-2);margin:0 0 18px;font-size:15px}
+.qtotal{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--rule-2);font-size:14px;color:var(--ink-2)}
+.qtotal b{font:800 22px/1 var(--cond);color:var(--ink)}
+.answer{display:flex;gap:10px;margin-top:20px}
+.answer input{flex:1;font-size:19px;min-height:52px;padding:10px 14px}
+.answer .btn{min-height:52px;padding:0 22px}
+.qerr{color:var(--bad);font-weight:600;font-size:14px;margin-top:8px}
+.qerr:empty{display:none}
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.choice{display:flex;align-items:center;gap:12px;min-height:58px;padding:8px 14px;border-radius:12px;border:1px solid var(--rule);background:var(--card);font:700 21px/1.1 var(--cond);cursor:pointer;text-align:left}
+.choice:hover:not(:disabled){border-color:var(--ink-3)}
+.choice .key{display:grid;place-items:center;width:24px;height:24px;border-radius:6px;background:var(--rule-2);font:700 13px var(--font);color:var(--ink-2);flex:none}
+.choice.is-right{border-color:var(--good);background:color-mix(in srgb,var(--good) 12%,var(--card))}
+.choice.is-wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,var(--card))}
+.choice:disabled{cursor:default}
+@media (max-width:560px){.choices{grid-template-columns:1fr}}
+.recall{display:grid;grid-template-columns:250px minmax(0,1fr);gap:26px;align-items:start}
+.recall>div{min-width:0}
+.recall .pimg{width:250px;height:250px;border-radius:18px}
+@media (max-width:640px){.recall{grid-template-columns:1fr}.recall .pimg{width:180px;height:180px;margin:0 auto}}
+.qname{font:800 36px/1 var(--cond);margin:4px 0 8px;overflow-wrap:anywhere}
+.ask{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.ask label{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:14px;color:var(--ink-2)}
+.ask input{font:800 34px/1 var(--cond);text-align:center;height:68px;font-variant-numeric:tabular-nums;width:100%;min-width:0;-moz-appearance:textfield;appearance:textfield}
+.ask input::-webkit-outer-spin-button,.ask input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.ask .is-spe{color:var(--spe)}
+.ask .is-spe input{border-color:var(--spe);border-width:2px}
+.ask .btn{grid-column:1/-1;min-height:50px}
+.fb{margin-top:20px;padding:16px 18px;border-radius:14px;border:1px solid var(--rule);background:var(--sunk)}
+.fb.good{border-color:color-mix(in srgb,var(--good) 55%,transparent);background:color-mix(in srgb,var(--good) 9%,var(--card))}
+.fb.mid{border-color:color-mix(in srgb,var(--mid) 55%,transparent);background:color-mix(in srgb,var(--mid) 9%,var(--card))}
+.fb.bad{border-color:color-mix(in srgb,var(--bad) 55%,transparent);background:color-mix(in srgb,var(--bad) 8%,var(--card))}
+.fb-top{display:flex;gap:14px;align-items:center}
+.fb-top .pimg{width:76px;height:76px}
+.fb-title{font:800 26px/1.05 var(--cond)}
+.fb table{width:100%;border-collapse:collapse;margin-top:12px;font-variant-numeric:tabular-nums}
+.fb th{font-size:13px;color:var(--ink-3);font-weight:600;text-align:right;padding:4px 8px}
+.fb th:first-child,.fb td:first-child{text-align:left}
+.fb td{padding:6px 8px;border-top:1px solid var(--rule-2);text-align:right;font:700 20px/1 var(--cond)}
+.fb td:first-child{font:600 15px var(--font)}
+.res-good{color:var(--good)} .res-mid{color:var(--mid)} .res-bad{color:var(--bad)}
+.qnext{display:flex;align-items:center;gap:12px;margin-top:18px}
+.kbdhint{font-size:13px;color:var(--ink-3)}
+.start{max-width:680px;margin:0 auto}
+.start .opts{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin:16px 0 22px}
+
+/* ---------- progress ---------- */
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+.board>div{padding:16px 20px;border-left:1px solid var(--rule-2)}
+.board>div:first-child{border-left:0}
+.fig{font:800 40px/1 var(--cond);font-variant-numeric:tabular-nums}
+.fig small{font-size:20px;color:var(--ink-3);margin-left:2px}
+.cap{font-size:14px;color:var(--ink-2);margin-top:6px;line-height:1.3}
+@media (max-width:760px){.board{grid-template-columns:1fr 1fr}.board>div:nth-child(3){border-left:0}.board>div:nth-child(n+3){border-top:1px solid var(--rule-2)}}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:980px){.two{grid-template-columns:1fr}}
+.chart svg{width:100%;height:auto;display:block}
+.chart text{font:600 11px var(--font);fill:var(--ink-3)}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--ink-2);margin-top:6px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+.rows{display:flex;flex-direction:column}
+.prow{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:7px 0;border-top:1px solid var(--rule-2)}
+.prow:first-child{border-top:0}
+.prow .pimg{width:40px;height:40px;border-radius:10px}
+.prow .pimg .ph{font-size:13px}
+.prow b{font:700 18px/1.1 var(--cond)}
+.prow .r{font:700 20px/1 var(--cond);font-variant-numeric:tabular-nums;text-align:right}
+.mbar{display:flex;height:22px;border-radius:11px;overflow:hidden;background:var(--rule-2)}
+.mbar span{height:100%}
+.mkey{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:10px;font-size:13px;color:var(--ink-2)}
+.mkey i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px}
+
+/* ---------- save & settings ---------- */
+.settings{background:var(--card);border:1px solid var(--rule);border-radius:14px;overflow:hidden}
+.set-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:14px 20px;border-top:1px solid var(--rule-2)}
+.set-row:first-child{border-top:0}
+.set-row .t{font-weight:700}
+.set-row p{margin:2px 0 0;font-size:14px;color:var(--ink-2);max-width:62ch}
+.set-row .ctl{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+@media (max-width:640px){.set-row{grid-template-columns:1fr}.set-row .ctl{justify-content:flex-start}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:14px}
+.kv dt{color:var(--ink-3);font-weight:600}
+.kv dd{margin:0}
+
+/* ---------- modal & toast ---------- */
+.modal-back{position:fixed;inset:0;background:rgba(9,13,18,.5);display:grid;place-items:center;padding:16px;z-index:60}
+.modal{position:relative;background:var(--card);border-radius:20px;width:100%;max-width:880px;max-height:calc(100vh - 32px);overflow:auto;padding:26px 28px;box-shadow:0 24px 70px rgba(0,0,0,.3)}
+.modal.narrow{max-width:560px}
+.modal .x{position:absolute;top:14px;right:14px}
+.detail{display:grid;grid-template-columns:300px minmax(0,1fr);gap:28px}
+.detail .pimg{width:300px;height:300px;border-radius:18px}
+@media (max-width:760px){.detail{grid-template-columns:1fr}.detail .pimg{width:200px;height:200px}}
+.detail-cols{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:16px}
+@media (max-width:560px){.detail-cols{grid-template-columns:1fr}}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);width:max-content;background:var(--ink);color:var(--paper);padding:11px 18px;border-radius:12px;font-weight:600;font-size:15px;z-index:80;box-shadow:0 10px 30px rgba(0,0,0,.25);max-width:calc(100vw - 32px)}
+@media (max-width:860px){.toast{bottom:96px}}
+
+/* ---------- types ---------- */
+.type .x{margin-left:5px;padding-left:5px;border-left:1px solid color-mix(in srgb,var(--tc) 40%,transparent);font-weight:800}
+.type.tbig{font-size:16px;padding:7px 12px;border-radius:7px}
+.tcard{background:var(--card);border:1px solid var(--rule);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.tc-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.tc-lvl{font-size:12px;font-weight:700;color:var(--ink-3)}
+.tc-mons{font-size:13px;color:var(--ink-2);margin-top:-4px}
+.tsec h4{font-size:13px;font-weight:700;color:var(--ink-3);margin:2px 0 2px}
+.trow{display:grid;grid-template-columns:118px minmax(0,1fr);gap:10px;align-items:start;padding:6px 0;border-top:1px solid var(--rule-2)}
+.trow .tl{font-size:13px;font-weight:600;color:var(--ink-2);padding-top:2px}
+.trow .none{font-size:13px;color:var(--ink-3)}
+.tprofile{background:var(--sunk);border-radius:12px;padding:6px 14px 10px;margin-bottom:16px}
+.tpicker{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.tpick{min-height:42px;padding:6px 4px;border-radius:9px;border:2px solid var(--t);background:var(--card);color:var(--ink);font-weight:700;font-size:14px;cursor:pointer}
+.tpick:hover:not(:disabled){background:color-mix(in srgb,var(--t) 14%,var(--card))}
+.tpick[aria-pressed="true"]{background:var(--t);color:var(--tc)}
+.tpick.none{--t:var(--ink-3)}
+.tpick.none[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.tpick:disabled{cursor:default}
+.tpick:disabled:not([aria-pressed="true"]){opacity:.55}
+.multq{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-weight:600}
+.mchoices{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:18px}
+.mchoice{justify-content:center;font-size:26px}
+details summary{cursor:pointer;color:var(--ink-2);font-weight:600}
+@media (max-width:640px){.tpicker{grid-template-columns:repeat(3,minmax(0,1fr))}.mchoices{grid-template-columns:repeat(3,minmax(0,1fr))}.trow{grid-template-columns:96px minmax(0,1fr)}}
+@media (max-width:860px){
+  .seg{flex-wrap:nowrap;overflow-x:auto;max-width:100%;scrollbar-width:none}
+  .seg::-webkit-scrollbar{display:none}
+  .cgroup{width:100%}
+  .trainbar{gap:10px}
+  .qcard{padding:16px 16px 20px;border-radius:16px}
+  .qtitle{font-size:26px}
+  .qname{font-size:30px}
+  .bars.big .v{font-size:24px}
+  .recall{gap:14px}
+  .recall .pimg{width:150px;height:150px}
+  .panel-head .lede{font-size:15px}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Sections">
+    <div class="brand">
+      <p class="word">Champions<br>Stat Trainer</p>
+      <div class="stripe" aria-hidden="true"><span style="background:var(--hp)"></span><span style="background:var(--atk)"></span><span style="background:var(--def)"></span><span style="background:var(--spa)"></span><span style="background:var(--spd)"></span><span style="background:var(--spe)"></span></div>
+      <div class="sub" id="brand-sub"></div>
+    </div>
+    <div class="nav" id="nav"></div>
+    <div class="rail-foot" id="rail-foot"></div>
+  </nav>
+  <main id="main"></main>
+</div>
+<datalist id="all-names"></datalist>
+<input type="file" id="file-in" accept="application/json,.json" hidden>
+<div id="modal-root"></div>
+<div id="toast-root" aria-live="polite"></div>
+<script>
+const BUILTIN = {
+  meta: {
+    title: 'Pokémon Champions ranked ladder, Season 6, Doubles',
+    season: 'Season 6', format: 'Doubles', regulation: 'M-C',
+    source: 'Pokémon Zone (ranked ladder usage)',
+    sourceUrl: 'https://www.pokemon-zone.com/champions/ranked-seasons/doubles/',
+    updated: '2026-10-01', pulled: '2026-10-02',
+    megaRule: 'A Mega form is included when its Mega Stone is held by at least 30% of that Pokémon\u2019s players.'
+  },
+  // [rank, id, name, dex, artId, types, base HP/Atk/Def/SpA/SpD/Spe, nature, stat points, top item, megas]
+  // mega: [id, name, artId (0 = none), types, base, stone, stone usage %]
+  rows: [
+    [1,'rillaboom','Rillaboom',812,812,'Grass','100/125/90/60/70/85','Adamant','32/32/0/0/0/2','Miracle Seed'],
+    [2,'sneasler','Sneasler',903,903,'Fighting/Poison','80/130/60/40/80/120','Adamant','2/32/0/0/0/32','White Herb'],
+    [3,'incineroar','Incineroar',727,727,'Fire/Dark','95/115/90/80/90/60','Careful','32/0/14/0/20/0','Sitrus Berry'],
+    [4,'salamence','Salamence',373,373,'Dragon/Flying','95/135/80/110/80/100','Timid','2/0/0/32/0/32','Salamencite',[['salamence-mega','Mega Salamence',10089,'Dragon/Flying','95/145/130/120/90/120','Salamencite',97.6]]],
+    [5,'indeedee-f','Indeedee (F)',876,10186,'Psychic/Normal','70/55/65/95/105/85','Relaxed','32/0/32/0/2/0','Colbur Berry'],
+    [6,'kingambit','Kingambit',983,983,'Dark/Steel','100/135/120/60/85/50','Adamant','32/32/0/0/2/0','Chople Berry'],
+    [7,'garchomp','Garchomp',445,445,'Dragon/Ground','108/130/95/80/85/102','Jolly','2/32/0/0/0/32','Garchompite Z',[['garchomp-megaz','Mega Garchomp Z',0,'Dragon','108/130/85/141/85/151','Garchompite Z',48.9]]],
+    [8,'basculegion','Basculegion (M)',902,902,'Water/Ghost','120/112/65/80/75/78','Adamant','2/32/0/0/0/32','Choice Scarf'],
+    [9,'golisopod','Golisopod',768,768,'Bug/Water','75/125/140/60/90/40','Adamant','32/32/0/0/2/0','Golisopite',[['golisopod-mega','Mega Golisopod',0,'Bug/Steel','75/150/175/70/120/40','Golisopite',98.3]]],
+    [10,'gholdengo','Gholdengo',1000,1000,'Steel/Ghost','87/60/95/133/91/84','Modest','2/0/0/32/0/32','Life Orb'],
+    [11,'archaludon','Archaludon',1018,1018,'Steel/Dragon','90/105/130/125/65/85','Calm','32/0/0/1/29/4','Leftovers'],
+    [12,'pelipper','Pelipper',279,279,'Water/Flying','60/50/100/95/70/65','Modest','2/0/0/32/0/32','Focus Sash'],
+    [13,'milotic','Milotic',350,350,'Water','95/60/79/100/125/81','Bold','32/0/32/0/2/0','Leftovers'],
+    [14,'raichu','Raichu',26,26,'Electric','60/90/55/90/80/110','Timid','2/0/0/32/0/32','Raichunite Y',[['raichu-megay','Mega Raichu Y',0,'Electric','60/100/55/160/80/130','Raichunite Y',83.6]]],
+    [15,'farigiraf','Farigiraf',981,981,'Normal/Psychic','120/90/70/110/70/60','Bold','27/0/20/0/19/0','Sitrus Berry'],
+    [16,'charizard','Charizard',6,6,'Fire/Flying','78/84/78/109/85/100','Modest','2/0/0/32/0/32','Charizardite Y',[['charizard-megay','Mega Charizard Y',10035,'Fire/Flying','78/104/78/159/115/100','Charizardite Y',93.1]]],
+    [17,'gardevoir','Gardevoir',282,282,'Psychic/Fairy','68/65/65/125/115/80','Modest','2/0/0/32/0/32','Gardevoirite',[['gardevoir-mega','Mega Gardevoir',10051,'Psychic/Fairy','68/85/65/165/135/100','Gardevoirite',96.7]]],
+    [18,'sylveon','Sylveon',700,700,'Fairy','95/65/65/110/130/60','Modest','32/0/2/32/0/0','Fairy Feather'],
+    [19,'arcanine-hisui','Arcanine (Hisui)',59,10230,'Fire/Rock','95/115/80/95/80/90','Jolly','2/32/0/0/0/32','Focus Sash'],
+    [20,'tyranitar','Tyranitar',248,248,'Rock/Dark','100/134/110/95/100/61','Adamant','2/32/0/0/0/32','Tyranitarite',[['tyranitar-mega','Mega Tyranitar',10049,'Rock/Dark','100/164/150/95/120/71','Tyranitarite',71.8]]],
+    [21,'whimsicott','Whimsicott',547,547,'Grass/Fairy','60/67/85/77/75/116','Timid','2/0/0/32/0/32','Focus Sash'],
+    [22,'staraptor','Staraptor',398,398,'Normal/Flying','85/120/70/50/60/100','Jolly','2/32/0/0/0/32','Staraptite',[['staraptor-mega','Mega Staraptor',0,'Fighting/Flying','85/140/100/60/90/110','Staraptite',83.7]]],
+    [23,'armarouge','Armarouge',936,936,'Fire/Psychic','85/60/100/125/80/75','Modest','32/0/0/32/2/0','Life Orb'],
+    [24,'metagross','Metagross',376,376,'Steel/Psychic','80/135/130/95/90/70','Adamant','2/32/0/0/0/32','Metagrossite',[['metagross-mega','Mega Metagross',10076,'Steel/Psychic','80/145/150/105/110/110','Metagrossite',89.7]]],
+    [25,'indeedee','Indeedee (M)',876,876,'Psychic/Normal','60/65/55/105/95/95','Modest','2/0/0/32/0/32','Choice Scarf'],
+    [26,'sinistcha','Sinistcha',1013,1013,'Grass/Ghost','71/60/106/121/80/70','Bold','32/0/14/0/20/0','Sitrus Berry'],
+    [27,'volcarona','Volcarona',637,637,'Bug/Fire','85/60/65/135/105/100','Bold','32/0/32/0/2/0','Grassy Seed'],
+    [28,'torkoal','Torkoal',324,324,'Fire','70/85/140/85/70/20','Quiet','32/0/0/32/2/0','Charcoal'],
+    [29,'excadrill','Excadrill',530,530,'Ground/Steel','110/135/60/50/65/88','Adamant','2/32/0/0/0/32','Focus Sash'],
+    [30,'floette-eternal','Floette (Eternal)',670,10061,'Fairy','74/65/67/125/128/92','Modest','2/0/0/32/0/32','Floettite',[['floette-mega','Mega Floette',0,'Fairy','74/85/87/155/148/102','Floettite',98.4]]],
+    [31,'politoed','Politoed',186,186,'Water','90/75/75/90/100/70','Modest','32/0/2/32/0/0','Sitrus Berry'],
+    [32,'grimmsnarl','Grimmsnarl',861,861,'Dark/Fairy','95/120/65/95/75/60','Careful','32/0/19/0/15/0','Light Clay'],
+    [33,'lucario','Lucario',448,448,'Fighting/Steel','70/110/70/115/70/90','Modest','2/0/0/32/0/32','Lucarionite Z',[['lucario-megaz','Mega Lucario Z',0,'Fighting/Steel','70/100/70/164/70/151','Lucarionite Z',92.8]]],
+    [34,'swampert','Swampert',260,260,'Water/Ground','100/110/90/85/90/60','Adamant','2/32/0/0/0/32','Swampertite',[['swampert-mega','Mega Swampert',10064,'Water/Ground','100/150/110/95/110/70','Swampertite',90.2]]],
+    [35,'froslass','Froslass',478,478,'Ice/Ghost','70/80/70/80/70/110','Timid','2/0/0/32/0/32','Froslassite',[['froslass-mega','Mega Froslass',0,'Ice/Ghost','70/80/70/140/100/120','Froslassite',98.9]]],
+    [36,'gengar','Gengar',94,94,'Ghost/Poison','60/65/60/130/75/110','Modest','2/0/0/32/0/32','Gengarite',[['gengar-mega','Mega Gengar',10038,'Ghost/Poison','60/65/80/170/95/130','Gengarite',88.3]]],
+    [37,'dragonite','Dragonite',149,149,'Dragon/Flying','91/134/95/100/100/80','Modest','2/0/0/32/0/32','Dragoninite',[['dragonite-mega','Mega Dragonite',0,'Dragon/Flying','91/124/115/145/125/100','Dragoninite',67.4]]],
+    [38,'baxcalibur','Baxcalibur',998,998,'Dragon/Ice','115/145/92/75/86/87','Adamant','2/32/0/0/0/32','Baxcalibrite',[['baxcalibur-mega','Mega Baxcalibur',0,'Dragon/Ice','115/175/117/105/101/87','Baxcalibrite',76.1]]],
+    [39,'ninetales-alola','Ninetales (Alola)',38,10104,'Ice/Fairy','73/67/75/81/100/109','Timid','2/0/0/32/0/32','Light Clay'],
+    [40,'aerodactyl','Aerodactyl',142,142,'Rock/Flying','80/105/65/60/75/130','Jolly','2/32/0/0/0/32','Focus Sash',[['aerodactyl-mega','Mega Aerodactyl',10042,'Rock/Flying','80/135/85/70/95/150','Aerodactylite',36.3]]],
+    [41,'venusaur','Venusaur',3,3,'Grass/Poison','80/82/83/100/100/80','Modest','2/0/0/32/0/32','Focus Sash'],
+    [42,'sableye','Sableye',302,302,'Dark/Ghost','50/75/75/65/65/50','Careful','32/0/9/0/25/0','Light Clay'],
+    [43,'primarina','Primarina',730,730,'Water/Fairy','80/74/74/126/116/60','Modest','32/0/2/32/0/0','Life Orb'],
+    [44,'glimmora','Glimmora',970,970,'Rock/Poison','83/55/90/130/81/86','Modest','2/0/0/32/0/32','Glimmoranite',[['glimmora-mega','Mega Glimmora',0,'Rock/Poison','83/90/105/150/96/101','Glimmoranite',48.6]]],
+    [45,'corviknight','Corviknight',823,823,'Flying/Steel','98/87/105/53/85/67','Careful','32/0/2/0/32/0','Psychic Seed'],
+    [46,'pawmot','Pawmot',923,923,'Electric/Fighting','70/115/70/70/60/105','Jolly','2/32/0/0/0/32','Focus Sash'],
+    [47,'delphox','Delphox',655,655,'Fire/Psychic','75/69/72/114/100/104','Timid','2/0/0/32/0/32','Delphoxite',[['delphox-mega','Mega Delphox',0,'Fire/Psychic','75/69/72/159/125/134','Delphoxite',84.4]]],
+    [48,'blastoise','Blastoise',9,9,'Water','79/83/100/85/105/78','Modest','32/0/2/32/0/0','Blastoisinite',[['blastoise-mega','Mega Blastoise',10036,'Water','79/103/120/135/115/78','Blastoisinite',90.6]]],
+    [49,'annihilape','Annihilape',979,979,'Fighting/Ghost','110/115/80/50/90/90','Adamant','2/32/0/0/0/32','Choice Scarf'],
+    [50,'hatterene','Hatterene',858,858,'Psychic/Fairy','57/90/95/136/103/29','Quiet','32/0/2/32/0/0','Life Orb'],
+    [51,'absol','Absol',359,359,'Dark','65/130/60/75/60/75','Jolly','2/32/0/0/0/32','Absolite Z',[['absol-megaz','Mega Absol Z',0,'Dark/Ghost','65/154/60/75/60/151','Absolite Z',97.4]]],
+    [52,'maushold','Maushold',925,925,'Normal','74/75/70/65/75/111','Jolly','2/32/0/0/0/32','Wide Lens'],
+    [53,'dragapult','Dragapult',887,887,'Dragon/Ghost','88/120/75/100/75/142','Timid','2/0/0/32/0/32','Life Orb'],
+    [54,'talonflame','Talonflame',663,663,'Fire/Flying','78/81/71/74/69/126','Jolly','2/32/0/0/0/32','Sharp Beak'],
+    [55,'kommoo','Kommo-o',784,784,'Dragon/Fighting','75/110/125/100/105/85','Modest','2/0/0/32/0/32','Leftovers'],
+    [56,'ceruledge','Ceruledge',937,937,'Fire/Ghost','75/125/80/60/100/85','Adamant','2/32/0/0/0/32','Grassy Seed'],
+    [57,'camerupt','Camerupt',323,323,'Fire/Ground','70/100/70/105/75/40','Quiet','32/0/2/32/0/0','Cameruptite',[['camerupt-mega','Mega Camerupt',10087,'Fire/Ground','70/120/100/145/105/20','Cameruptite',97.8]]],
+    [58,'hydreigon','Hydreigon',635,635,'Dark/Dragon','92/105/90/125/90/98','Modest','2/0/0/32/0/32','Choice Scarf'],
+    [59,'blaziken','Blaziken',257,257,'Fire/Fighting','80/120/70/110/70/80','Adamant','2/32/0/0/0/32','Blazikenite',[['blaziken-mega','Mega Blaziken',10050,'Fire/Fighting','80/160/80/130/80/100','Blazikenite',53.6]]],
+    [60,'typhlosion-hisui','Typhlosion (Hisui)',157,10233,'Fire/Ghost','73/84/78/119/85/95','Modest','2/0/0/32/0/32','Choice Scarf'],
+    [61,'mawile','Mawile',303,303,'Steel/Fairy','50/85/85/55/55/50','Brave','32/32/0/0/2/0','Mawilite',[['mawile-mega','Mega Mawile',10052,'Steel/Fairy','50/105/125/55/95/50','Mawilite',98.4]]],
+    [62,'sirfetchd',"Sirfetch'd",865,865,'Fighting','62/135/95/68/82/65','Adamant','32/32/0/0/2/0','Leek'],
+    [63,'gallade','Gallade',475,475,'Psychic/Fighting','68/125/65/65/115/80','Adamant','2/32/0/0/0/32','Focus Sash'],
+    [64,'vivillon-fancy','Vivillon (Fancy)',666,666,'Bug/Flying','80/52/50/90/50/89','Timid','2/0/0/32/0/32','Focus Sash'],
+    [65,'inteleon','Inteleon',818,818,'Water','70/85/65/125/65/120','Timid','2/0/0/32/0/32','Scope Lens'],
+    [66,'zoroark-hisui','Zoroark (Hisui)',571,10239,'Normal/Ghost','55/100/60/125/60/110','Timid','2/0/0/32/0/32','Focus Sash'],
+    [67,'meowscarada','Meowscarada',908,908,'Grass/Dark','76/110/70/81/70/123','Jolly','2/32/0/0/0/32','Choice Scarf'],
+    [68,'tsareena','Tsareena',763,763,'Grass','72/120/98/50/98/72','Adamant','2/32/0/0/0/32','Wide Lens'],
+    [69,'rotom-wash','Rotom (Wash)',479,10009,'Electric/Water','50/65/107/105/107/86','Modest','2/0/0/32/0/32','Sitrus Berry'],
+    [70,'alakazam','Alakazam',65,65,'Psychic','55/50/45/135/95/120','Timid','2/0/0/32/0/32','Alakazite',[['alakazam-mega','Mega Alakazam',10037,'Psychic','55/50/65/175/105/150','Alakazite',71.2]]],
+    [71,'kleavor','Kleavor',900,900,'Bug/Rock','70/135/95/45/70/85','Adamant','2/32/0/0/0/32','Focus Sash'],
+    [72,'empoleon','Empoleon',395,395,'Water/Steel','84/86/88/111/101/60','Modest','32/0/2/32/0/0','Leftovers'],
+    [73,'espathra','Espathra',956,956,'Psychic','95/60/60/101/60/105','Timid','32/0/14/0/2/18','Electric Seed'],
+    [74,'weavile','Weavile',461,461,'Dark/Ice','70/120/65/45/85/125','Jolly','2/32/0/0/0/32','Focus Sash'],
+    [75,'chandelure','Chandelure',609,609,'Ghost/Fire','60/55/90/145/90/80','Modest','2/0/0/32/0/32','Chandelurite',[['chandelure-mega','Mega Chandelure',0,'Ghost/Fire','60/75/110/175/110/90','Chandelurite',37.9]]],
+    [76,'mimikyu','Mimikyu',778,778,'Ghost/Fairy','55/90/80/50/105/96','Adamant','32/32/2/0/0/0','Life Orb'],
+    [77,'scovillain','Scovillain',952,952,'Grass/Fire','65/108/65/108/65/75','Bold','32/0/19/0/15/0','Scovillainite',[['scovillain-mega','Mega Scovillain',0,'Grass/Fire','65/138/85/138/85/75','Scovillainite',92.1]]],
+    [78,'malamar','Malamar',687,687,'Dark/Psychic','86/92/88/68/75/73','Adamant','32/32/2/0/0/0','Malamarite',[['malamar-mega','Mega Malamar',0,'Dark/Psychic','86/102/88/98/120/88','Malamarite',48.2]]],
+    [79,'aegislash','Aegislash',681,681,'Steel/Ghost','60/50/140/50/140/60','Adamant','2/32/0/0/0/32','Focus Sash'],
+    [80,'pincurchin','Pincurchin',871,871,'Electric','48/101/95/91/85/15','Quiet','32/0/0/32/2/0','Magnet'],
+    [81,'scizor','Scizor',212,212,'Bug/Steel','70/130/100/55/80/65','Adamant','32/32/0/0/2/0','Life Orb',[['scizor-mega','Mega Scizor',10046,'Bug/Steel','70/150/140/65/100/75','Scizorite',32.7]]],
+    [82,'grapploct','Grapploct',853,853,'Fighting','80/118/90/70/80/42','Brave','32/32/0/0/2/0','Black Belt'],
+    [83,'clefable','Clefable',36,36,'Fairy','95/70/73/95/90/60','Bold','32/0/32/0/2/0','Sitrus Berry'],
+    [84,'toxapex','Toxapex',748,748,'Poison/Water','50/63/152/53/142/35','Bold','32/0/18/0/16/0','Leftovers'],
+    [85,'toxtricity','Toxtricity',849,849,'Electric/Poison','75/98/70/114/70/75','Modest','2/0/0/32/0/32','Life Orb'],
+    [86,'kangaskhan','Kangaskhan',115,115,'Normal','105/95/80/40/80/90','Adamant','32/32/2/0/0/0','Kangaskhanite',[['kangaskhan-mega','Mega Kangaskhan',10039,'Normal','105/125/100/60/100/100','Kangaskhanite',41.9]]],
+    [87,'cinderace','Cinderace',815,815,'Fire','80/116/75/65/75/119','Adamant','2/32/0/0/0/32','Life Orb'],
+    [88,'meganium','Meganium',154,154,'Grass','80/82/100/83/100/80','Modest','32/0/0/32/0/2','Meganiumite',[['meganium-mega','Mega Meganium',0,'Grass/Fairy','80/92/115/143/115/80','Meganiumite',98.8]]],
+    [89,'goodra-hisui','Goodra (Hisui)',706,10242,'Steel/Dragon','80/100/100/110/150/60','Bold','32/0/32/0/2/0','Leftovers'],
+    [90,'basculegion-f','Basculegion (F)',902,10248,'Water/Ghost','120/92/65/100/75/78','Modest','2/0/0/32/0/32','Choice Scarf'],
+    [91,'greninja','Greninja',658,658,'Water/Dark','72/95/67/103/71/122','Timid','2/0/0/32/0/32','Greninjite',[['greninja-mega','Mega Greninja',0,'Water/Dark','72/125/77/133/81/142','Greninjite',50.4]]],
+    [92,'oranguru','Oranguru',765,765,'Normal/Psychic','90/60/80/90/110/60','Relaxed','32/0/32/0/2/0','Mental Herb'],
+    [93,'gyarados','Gyarados',130,130,'Water/Flying','95/125/79/60/100/81','Adamant','2/32/0/0/0/32','Gyaradosite',[['gyarados-mega','Mega Gyarados',10041,'Water/Dark','95/155/109/70/130/81','Gyaradosite',50.3]]],
+    [94,'mamoswine','Mamoswine',473,473,'Ice/Ground','110/130/80/70/60/80','Adamant','2/32/0/0/0/32','Focus Sash'],
+    [95,'samurott-hisui','Samurott (Hisui)',503,10236,'Water/Dark','90/108/80/100/65/85','Adamant','2/32/0/0/0/32','Choice Scarf'],
+    [96,'overqwil','Overqwil',904,904,'Dark/Poison','85/115/95/65/65/85','Careful','32/0/2/0/32/0','Leftovers'],
+    [97,'snorlax','Snorlax',143,143,'Normal','160/110/65/65/110/30','Relaxed','32/0/32/0/2/0','Leftovers'],
+    [98,'scrafty','Scrafty',560,560,'Dark/Fighting','65/90/115/45/115/58','Adamant','32/32/0/0/2/0','Scraftinite',[['scrafty-mega','Mega Scrafty',0,'Dark/Fighting','65/130/135/55/135/68','Scraftinite',71.9]]],
+    [99,'altaria','Altaria',334,334,'Dragon/Flying','75/70/90/70/105/80','Timid','32/0/5/0/0/29','Haban Berry',[['altaria-mega','Mega Altaria',10067,'Dragon/Fairy','75/110/110/110/105/80','Altarianite',32.0]]],
+    [100,'rotom-heat','Rotom (Heat)',479,10008,'Electric/Fire','50/65/107/105/107/86','Modest','2/0/0/32/0/32','Choice Scarf']
+  ]
+};
+'use strict';
+/* =========================================================
+   Constants
+   ========================================================= */
+const STATS = ['hp','atk','def','spa','spd','spe'];
+const SHORT = {hp:'HP',atk:'Atk',def:'Def',spa:'SpA',spd:'SpD',spe:'Spe'};
+const LONG  = {hp:'HP',atk:'Attack',def:'Defense',spa:'Sp. Atk',spd:'Sp. Def',spe:'Speed'};
+const NATURES = {Adamant:['atk','spa'],Jolly:['spe','spa'],Timid:['spe','atk'],Modest:['spa','atk'],Careful:['spd','spa'],
+  Impish:['def','spa'],Bold:['def','atk'],Calm:['spd','atk'],Relaxed:['def','spe'],Sassy:['spd','spe'],Quiet:['spa','spe'],
+  Brave:['atk','spe'],Naive:['spe','spd'],Hasty:['spe','def'],Lonely:['atk','def'],Naughty:['atk','spd'],Mild:['spa','def'],
+  Rash:['spa','spd'],Gentle:['spd','def'],Lax:['def','spd'],Hardy:null,Docile:null,Serious:null,Bashful:null,Quirky:null};
+const TYPE_COLOR = {Normal:'#9FA19F',Fire:'#E62829',Water:'#2980EF',Electric:'#F2B807',Grass:'#3FA129',Ice:'#3DCEF3',
+  Fighting:'#FF8000',Poison:'#9141CB',Ground:'#915121',Flying:'#81B9EF',Psychic:'#EF4179',Bug:'#91A119',Rock:'#AFA981',
+  Ghost:'#704170',Dragon:'#5060E1',Dark:'#624D4E',Steel:'#60A1B8',Fairy:'#EF70EF'};
+const SAVE_KEY = 'champions-stat-trainer.v1';
+const SCALE = {base:200, champ:270};
+const ART = id => `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
+const SD  = (dir, slug) => `https://play.pokemonshowdown.com/sprites/${dir}/${slug}.png`;
+
+/* =========================================================
+   Utilities
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
+const dayKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const fmtDay = iso => new Date(iso + 'T12:00:00').toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+const fmtTime = ts => new Date(ts).toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+const pct = x => Math.round(x * 100) + '%';
+const shuffle = a => { a = [...a]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+function textOn(hex) {
+  const n = parseInt(hex.slice(1), 16), r = n >> 16 & 255, g = n >> 8 & 255, b = n & 255;
+  return (0.299*r + 0.587*g + 0.114*b) > 168 ? '#1b1f24' : '#ffffff';
+}
+function parseStats(str) {
+  const a = Array.isArray(str) ? str : String(str).split('/').map(Number);
+  const o = {}; STATS.forEach((k, i) => o[k] = Number(a[i]) || 0); return o;
+}
+
+/* =========================================================
+   State and persistence
+   ========================================================= */
+const DEFAULT_SETTINGS = {
+  statView: 'base',        // 'base' | 'champ'
+  barColor: 'stat',        // 'stat' | 'value'
+  answerStyle: 'type',     // 'type' | 'choice'
+  tolerance: 3,            // partial credit window for recall answers
+  roundLength: 20,
+  includeMegas: true,
+  nameInRecall: true,
+  recallStat: 'random',    // 'random' | one of hp/atk/def/spa/spd
+  imageSource: 'artwork',  // 'artwork' | 'showdown' | 'off'
+  batchSize: 6,
+  theme: 'auto'
+};
+function defaultState() {
+  return {
+    v: 1,
+    usage: {meta: {...BUILTIN.meta}, rows: BUILTIN.rows, extra: []},
+    settings: {...DEFAULT_SETTINGS},
+    batches: [], current: null, draft: [],
+    pool: {}, cards: {}, log: [], days: {},
+    ui: {panel: 'usage', trainSource: 'batch', trainMode: 'study', studySort: 'rank', studyView: 'cards', typesSource: 'single', typesMode: 'study', typesSort: 'chart'},
+    createdAt: Date.now(), lastOpen: 0, savedAt: 0
+  };
+}
+function migrate(s) {
+  const d = defaultState();
+  if (!s || typeof s !== 'object') return d;
+  const out = {...d, ...s};
+  out.settings = {...d.settings, ...(s.settings || {})};
+  out.ui = {...d.ui, ...(s.ui || {})};
+  out.usage = s.usage && Array.isArray(s.usage.rows) && s.usage.rows.length ? {extra: [], ...s.usage} : d.usage;
+  if (out.settings.statView !== 'base') out.settings.statView = 'champ';
+  if (!['stat','value'].includes(out.settings.barColor)) out.settings.barColor = 'stat';
+  for (const k of ['batches','draft','log']) if (!Array.isArray(out[k])) out[k] = [];
+  for (const k of ['pool','cards','days']) if (!out[k] || typeof out[k] !== 'object') out[k] = {};
+  return out;
+}
+function load() {
+  try { const raw = localStorage.getItem(SAVE_KEY); if (raw) return migrate(JSON.parse(raw)); } catch (e) { console.warn('Could not read saved data', e); }
+  return defaultState();
+}
+let state = load();
+let storageOK = true;
+function persist() {
+  state.savedAt = Date.now();
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); storageOK = true; }
+  catch (e) { storageOK = false; console.warn('localStorage unavailable', e); }
+  scheduleFileWrite();
+  renderRailFoot();
+}
+function saveJSON() {
+  return JSON.stringify({app: 'champions-stat-trainer', format: 1, exportedAt: new Date().toISOString(), state}, null, 1);
+}
+
+/* =========================================================
+   Data model built from the usage snapshot
+   ========================================================= */
+let DATA = null;
+function buildData(usage) {
+  const species = {}, forms = {}, ranking = [];
+  const add = (r, ranked) => {
+    const [rank, id, name, dex, art, types, base, nature, sp, item, megas] = r;
+    if (!id || species[id]) { if (ranked && species[id] && species[id].rank == null) { species[id].rank = rank; ranking.push(id); } return; }
+    const s = {id, name, dex, art, types: String(types).split('/'), base: parseStats(base), nature, sp: parseStats(sp), item, megas: [], rank: ranked ? rank : null};
+    species[id] = s;
+    forms[id] = {id, speciesId: id, name, dex, art, types: s.types, base: s.base, nature, sp: s.sp, item, isMega: false};
+    (megas || []).forEach(m => {
+      const [mid, mname, mart, mtypes, mbase, stone, stonePct] = m;
+      forms[mid] = {id: mid, speciesId: id, name: mname, dex, art: mart || 0, types: String(mtypes).split('/'), base: parseStats(mbase),
+        nature, sp: s.sp, item: stone, stone, stonePct, isMega: true};
+      s.megas.push(mid);
+    });
+    if (ranked) ranking.push(id);
+  };
+  [...usage.rows].sort((a, b) => a[0] - b[0]).forEach(r => add(r, true));
+  (usage.extra || []).forEach(r => add(r, false));
+  BUILTIN.rows.forEach(r => add(r, false)); // keeps anything from history resolvable
+  const alias = new Map();
+  Object.values(forms).forEach(f => aliasesOf(f).forEach(a => { if (!alias.has(a)) alias.set(a, f.id); }));
+  return {species, forms, ranking, alias, meta: usage.meta || {}};
+}
+function aliasesOf(f) {
+  const a = new Set([norm(f.name), norm(f.id)]);
+  const m = f.name.match(/^(.*) \((.*)\)$/);
+  if (m) {
+    const [, base, tag] = m;
+    a.add(norm(base + tag)); a.add(norm(tag + base));
+    const adj = {Hisui:'Hisuian', Alola:'Alolan', F:'Female', M:'Male', Eternal:'Eternal Flower'}[tag];
+    if (adj) { a.add(norm(adj + base)); a.add(norm(base + adj)); }
+    if (tag === 'M' || tag === 'Fancy') a.add(norm(base));
+    if (tag === 'Wash' || tag === 'Heat') { a.add(norm(tag + ' rotom')); }
+  }
+  if (f.isMega) {
+    const rest = f.name.replace(/^Mega /, '');
+    a.add(norm(rest + 'mega'));
+    const p = rest.split(' ');
+    if (p.length === 2) { a.add(norm(p[0] + 'mega' + p[1])); a.add(norm('mega' + p[0] + p[1])); }
+  }
+  return a;
+}
+function findForm(text) { const id = DATA.alias.get(norm(text)); return id ? DATA.forms[id] : null; }
+function rebuild() { DATA = buildData(state.usage); fillDatalist(); buildTypeCards(); }
+function fillDatalist() {
+  const names = Object.values(DATA.forms).map(f => f.name).sort((a, b) => a.localeCompare(b));
+  $('#all-names').innerHTML = names.map(n => `<option value="${esc(n)}">`).join('');
+}
+
+/* stats at the chosen view
+   base   : species base stats
+   champ  : Champions Lv 50, perfect IVs, 0 Stat Points, neutral nature (HP = base + 75, others = base + 20)
+   spread : Lv 50 with the common nature and Stat Points (kept for reference, not displayed) */
+function statsOf(f, view) {
+  if (view === 'base') return {...f.base};
+  if (view !== 'spread') { const o = {}; STATS.forEach(k => o[k] = f.base[k] + (k === 'hp' ? 75 : 20)); return o; }
+  const nat = NATURES[f.nature] || null, o = {};
+  STATS.forEach(k => {
+    const b = f.base[k], s = f.sp[k] || 0;
+    if (k === 'hp') { o[k] = b + s + 75; return; }
+    const v = b + s + 20;
+    o[k] = nat && nat[0] === k ? Math.floor(v * 11 / 10) : nat && nat[1] === k ? Math.floor(v * 9 / 10) : v;
+  });
+  return o;
+}
+const total = st => STATS.reduce((a, k) => a + st[k], 0);
+/* reachable Champions range: min = 0 SP + hindering nature, max = 32 SP + boosting nature (HP has no nature) */
+function rangeOf(f) {
+  const o = {};
+  STATS.forEach(k => { const b = f.base[k]; o[k] = k === 'hp' ? [b + 75, b + 107] : [Math.floor((b + 20) * 9 / 10), Math.floor((b + 52) * 11 / 10)]; });
+  return o;
+}
+/* heat colour from a base stat: red (low) > orange > yellow > green > blue (very high) */
+function heat(b) { return `hsl(${clamp((b - 20) * 1.4, 0, 225).toFixed(0)} 68% var(--heat-l))`; }
+function spreadText(f) {
+  const parts = STATS.filter(k => f.sp[k]).map(k => `${f.sp[k]} ${SHORT[k]}`);
+  return parts.length ? parts.join(' / ') : 'no stat points';
+}
+function commonSet(f) { return `${natureText(f)}, ${spreadText(f)}`; }
+function natureText(f) {
+  const n = NATURES[f.nature];
+  return n ? `${f.nature} (+${SHORT[n[0]]}, \u2212${SHORT[n[1]]})` : (f.nature || 'Neutral');
+}
+
+/* collections */
+const megaOn = () => state.settings.includeMegas;
+function formsOfSpecies(sid) {
+  const s = DATA.species[sid]; if (!s) return [];
+  return [sid, ...(megaOn() ? s.megas : [])].filter(id => DATA.forms[id]);
+}
+function currentBatch() { return state.batches.find(b => b.id === state.current) || null; }
+function batchFormIds() { const b = currentBatch(); return b ? b.species.flatMap(formsOfSpecies) : []; }
+function poolFormIds() {
+  return Object.keys(state.pool).filter(id => DATA.forms[id] && (megaOn() || !DATA.forms[id].isMega))
+    .sort((a, b) => rankOfForm(a) - rankOfForm(b));
+}
+function rankOfForm(id) { const f = DATA.forms[id]; const r = f && DATA.species[f.speciesId]?.rank; return r == null ? 999 : r + (f.isMega ? .5 : 0); }
+function speciesStatus(sid) {
+  const b = currentBatch();
+  if (b && b.species.includes(sid)) return 'batch';
+  if (state.pool[sid] || (DATA.species[sid]?.megas || []).some(m => state.pool[m])) return 'learned';
+  return '';
+}
+function sourceIds(src) { return src === 'history' ? poolFormIds() : batchFormIds(); }
+
+/* mastery records */
+function rec(id, mode) {
+  state.cards[id] = state.cards[id] || {};
+  return state.cards[id][mode] = state.cards[id][mode] || {box: 0, seen: 0, score: 0, last: 0};
+}
+function peek(id, mode) { return state.cards[id]?.[mode] || null; }
+function level(id) {
+  const a = peek(id, 'name'), b = peek(id, 'recall');
+  if (!a && !b) return -1;
+  const boxes = [a, b].filter(Boolean).map(r => r.box);
+  return Math.round(boxes.reduce((x, y) => x + y, 0) / boxes.length);
+}
+function accuracyOf(id) {
+  let seen = 0, score = 0;
+  ['name','recall'].forEach(m => { const r = peek(id, m); if (r) { seen += r.seen; score += r.score; } });
+  return seen ? {seen, acc: score / seen} : {seen: 0, acc: null};
+}
+
+/* =========================================================
+   UI state (not persisted beyond state.ui)
+   ========================================================= */
+const ui = {usageFilter: 'all', usageQuery: '', batchQuery: '', studyQuery: '', typesQuery: '', quiz: null, tquiz: null, modal: null, studyOrder: []};
+const PANELS = [
+  {id: 'usage', label: 'Usage'},
+  {id: 'batch', label: 'Batch'},
+  {id: 'train', label: 'Train'},
+  {id: 'types', label: 'Types'},
+  {id: 'progress', label: 'Progress'},
+  {id: 'save', label: 'Save'}
+];
+
+/* =========================================================
+   Small render helpers
+   ========================================================= */
+function imgSources(f) {
+  const mode = state.settings.imageSource;
+  if (mode === 'off') return [];
+  const pk = f.art ? [ART(f.art)] : [];
+  const sd = [SD('home-centered', f.id), SD('dex', f.id)];
+  const list = mode === 'showdown' ? [...sd, ...pk] : [...pk, ...sd];
+  if (f.isMega) { const s = DATA.species[f.speciesId]; if (s && s.art) list.push(ART(s.art)); }
+  list.push(SD('gen5', f.id));
+  return [...new Set(list)];
+}
+function placeholder(f) {
+  const t1 = TYPE_COLOR[f.types[0]] || '#888', t2 = TYPE_COLOR[f.types[1] || f.types[0]] || t1;
+  const core = f.name.replace(/^Mega /, '').replace(/\(.*\)/, '').trim();
+  const initials = (f.isMega ? 'M' + core[0] : core.split(/\s+/).map(w => w[0]).join('').slice(0, 2)).toUpperCase();
+  return `<span class="ph" style="--t1:${t1};--t2:${t2}" aria-hidden="true">${esc(initials)}</span>`;
+}
+function img(f, extra = '') {
+  const srcs = imgSources(f);
+  if (!srcs.length) return `<div class="pimg noimg ${extra}">${placeholder(f)}</div>`;
+  return `<div class="pimg ${extra}"><img alt="${esc(f.name)}" loading="lazy" decoding="async" src="${esc(srcs[0])}" data-srcs="${esc(srcs.join('|'))}" data-i="0" onerror="imgNext(this)">${placeholder(f)}</div>`;
+}
+window.imgNext = function (el) {
+  const s = el.dataset.srcs.split('|'), i = +el.dataset.i + 1;
+  if (i < s.length) { el.dataset.i = i; el.src = s[i]; }
+  else { el.parentElement.classList.add('noimg'); el.remove(); }
+};
+function pills(types) {
+  return `<span class="types">${types.map(t => { const c = TYPE_COLOR[t] || '#888'; return `<span class="type" style="--t:${c};--tc:${textOn(c)}">${esc(t)}</span>`; }).join('')}</span>`;
+}
+function bars(st, view, opts = {}) {
+  const max = SCALE[view], f = opts.form;
+  const showRange = view === 'champ' && f && opts.range !== false;
+  const rg = showRange ? rangeOf(f) : null;
+  const byValue = state.settings.barColor === 'value' && f;
+  return `<div class="bars ${opts.big ? 'big' : ''} ${showRange ? 'has-range' : ''} ${byValue ? 'by-value' : ''}">${STATS.map(k => {
+    const w = clamp(st[k] / max * 100, 2, 100).toFixed(1);
+    const spe = k === 'spe' ? 'is-spe' : '';
+    const c = byValue ? heat(f.base[k]) : `var(--${k})`;
+    const band = showRange ? `<span class="band" style="--c:${c};left:${(rg[k][0] / max * 100).toFixed(1)}%;width:${((rg[k][1] - rg[k][0]) / max * 100).toFixed(1)}%"></span>` : '';
+    return `<span class="k ${spe}">${SHORT[k]}</span><span class="track">${band}<span class="fill" style="--c:${c};width:${opts.animate ? 0 : w}%" data-w="${w}"></span></span><span class="v ${spe}">${opts.hide ? '?' : st[k]}</span>${showRange ? `<span class="rg" title="Min with a hindering nature and no Stat Points, max with 32 Stat Points and a boosting nature">${rg[k][0]}\u2013${rg[k][1]}</span>` : ''}`;
+  }).join('')}</div>`;
+}
+function heatLegend() {
+  const stops = [[35, 'under 50'], [50, '50'], [80, '80'], [110, '110'], [140, '140'], [170, '170+']];
+  return `<div class="heat-legend" aria-label="Colour by value legend"><span>Bar colour by base stat:</span><span class="heat-ticks">${stops.map(([b, l]) => `<i style="background:${heat(b)}"></i>${l}`).join('')}</span></div>`;
+}
+function animateBars(root = document) {
+  requestAnimationFrame(() => requestAnimationFrame(() => $$('.fill[data-w]', root).forEach(el => { el.style.width = el.dataset.w + '%'; })));
+}
+function rankLabel(f) {
+  const r = DATA.species[f.speciesId]?.rank;
+  return r ? `Usage #${r}` : 'Outside the current top 100';
+}
+function card(f, view) {
+  const st = statsOf(f, view), ch = statsOf(f, 'champ'), rg = rangeOf(f);
+  return `<div class="pcard" role="button" tabindex="0" data-act="open-card" data-id="${f.id}" aria-label="${esc(f.name)} details">
+    <div class="pcard-top">${img(f)}
+      <div class="pmeta">
+        <div class="prank">${rankLabel(f)}${f.isMega ? ' <span class="mega-tag">Mega</span>' : ''}</div>
+        <div class="pname">${esc(f.name)}</div>
+        ${pills(f.types)}
+        <div class="spe-big"><b>${st.spe}</b><span>${view === 'base' ? 'base<br>Speed' : 'Champions<br>Speed'}</span></div>
+      </div>
+    </div>
+    <div class="pnote">Common set: ${esc(f.nature)}, ${esc(spreadText(f))}</div>
+    ${bars(st, view, {form: f})}
+    <div class="pfoot">${view === 'base'
+      ? `<span>Total ${total(st)}</span><span>Champions Spe ${ch.spe}, max ${rg.spe[1]}</span>`
+      : `<span>Total ${total(st)}</span><span>Base Spe ${f.base.spe}</span>`}</div>
+  </div>`;
+}
+function seg(name, options, current) {
+  return `<div class="seg" role="group">${options.map(([v, label]) => `<button type="button" data-act="${name}" data-v="${v}" aria-pressed="${v === current}">${label}</button>`).join('')}</div>`;
+}
+function toast(msg, ms = 2600) {
+  const root = $('#toast-root');
+  root.innerHTML = `<div class="toast">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t = setTimeout(() => { root.innerHTML = ''; }, ms);
+}
+const tickSVG = `<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9.2 10 3" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+/* =========================================================
+   Shell: nav, rail footer
+   ========================================================= */
+function renderNav() {
+  const counts = {
+    usage: DATA.ranking.length,
+    batch: state.draft.length ? `${state.draft.length} picked` : '',
+    train: batchFormIds().length || '',
+    types: Object.keys(TCARDS).length || '',
+    progress: state.log.length ? state.log.length : '',
+    save: ''
+  };
+  $('#nav').innerHTML = PANELS.map(p => `<button type="button" data-act="nav" data-v="${p.id}" ${state.ui.panel === p.id ? 'aria-current="page"' : ''}><span>${p.label}</span><span class="count">${counts[p.id]}</span></button>`).join('');
+  const m = DATA.meta;
+  $('#brand-sub').textContent = `${m.format || 'Doubles'}, ${m.season || ''}, Regulation ${m.regulation || ''}`;
+}
+function renderRailFoot() {
+  const el = $('#rail-foot'); if (!el) return;
+  let line;
+  if (fileLink.status === 'linked') line = `<span class="savestate"><span class="dot"></span>Saving to ${esc(fileLink.handle?.name || 'your file')}</span>`;
+  else if (fileLink.status === 'needs-permission') line = `<span class="savestate"><span class="dot warn"></span><button class="btn sm" data-act="save-reconnect">Reconnect save file</button></span>`;
+  else line = `<span class="savestate"><span class="dot ${storageOK ? '' : 'warn'}"></span>${storageOK ? 'Autosaved in this browser' : 'Browser storage is blocked, download your save'}</span>`;
+  el.innerHTML = `${line}<span>Usage data from ${esc(fmtDay(DATA.meta.updated || dayKey()))}</span>`;
+}
+
+/* =========================================================
+   Panel: Usage
+   ========================================================= */
+function renderUsage() {
+  const m = DATA.meta, q = norm(ui.usageQuery);
+  const counts = {all: 0, batch: 0, learned: 0, new: 0};
+  const rows = DATA.ranking.map(id => DATA.species[id]).filter(Boolean);
+  rows.forEach(s => { const st = speciesStatus(s.id); counts.all++; if (st === 'batch') counts.batch++; if (st === 'learned' || st === 'batch') counts.learned++; if (!st) counts.new++; });
+  const shown = rows.filter(s => {
+    const st = speciesStatus(s.id);
+    if (ui.usageFilter === 'batch' && st !== 'batch') return false;
+    if (ui.usageFilter === 'learned' && !st) return false;
+    if (ui.usageFilter === 'new' && st) return false;
+    if (q && !norm(s.name).includes(q) && !s.megas.some(mid => norm(DATA.forms[mid].name).includes(q)) && !s.types.some(t => norm(t) === q)) return false;
+    return true;
+  });
+  const list = shown.map(s => {
+    const f = DATA.forms[s.id], st = speciesStatus(s.id), picked = state.draft.includes(s.id);
+    const megas = s.megas.map(mid => DATA.forms[mid]).map(mf => `<span>${esc(mf.name)}: base Spe ${mf.base.spe}${mf.stonePct ? `, stone on ${mf.stonePct}%` : ''}</span>`).join('');
+    return `<div class="urow">
+      <span class="rank">${s.rank}</span>
+      ${img(f)}
+      <div><div class="uname">${esc(s.name)}</div><div class="umeta">${pills(s.types)}<span class="m-only">Spe <b>${f.base.spe}</b></span>${megas}</div></div>
+      <span class="unum spe c-base">${f.base.spe}</span>
+      <span class="unum c-lv">${statsOf(f, 'champ').spe}<small>max ${rangeOf(f).spe[1]}</small></span>
+      <div class="uact">${st === 'batch' ? '<span class="status batch">In batch</span>' : st === 'learned' ? '<span class="status learned">Learned</span>' : ''}
+        <button class="btn sm" data-act="draft-toggle" data-id="${s.id}" aria-pressed="${picked}">${picked ? 'Picked' : 'Pick'}</button></div>
+    </div>`;
+  }).join('');
+  return `
+  <div class="panel-head"><div>
+    <h1>Usage</h1>
+    <p class="lede">Top ${DATA.ranking.length} Pok\u00e9mon on the Champions ranked ladder (${esc(m.format)}, ${esc(m.season)}, Regulation ${esc(m.regulation)}), from ${esc(m.source)}, updated ${esc(fmtDay(m.updated))}. Speed columns show base Speed and Champions Speed (Lv 50, no Stat Points, neutral nature), with the highest reachable Speed underneath.</p>
+  </div>
+  <button class="btn" data-act="open-import">Update usage data</button></div>
+  <div class="toolbar">
+    <div class="grow"><input type="search" placeholder="Search by name or type" value="${esc(ui.usageQuery)}" data-input="usage-q" aria-label="Search usage list"></div>
+    ${seg('usage-filter', [['all', `All ${counts.all}`], ['batch', `In batch ${counts.batch}`], ['learned', `Learned ${counts.learned}`], ['new', `Not learned ${counts.new}`]], ui.usageFilter)}
+  </div>
+  <div class="ulist" id="usage-list">
+    <div class="urow head"><span style="text-align:right">Rank</span><span></span><span>Pok\u00e9mon</span><span class="c-base" style="text-align:right">Base Spe</span><span class="c-lv" style="text-align:right">Champions Spe</span><span style="text-align:right">Next batch</span></div>
+    ${list || '<div class="urow"><span></span><span></span><span class="muted">Nothing matches that search.</span></div>'}
+  </div>
+  ${draftBar()}`;
+}
+function draftBar() {
+  if (!state.draft.length) return '';
+  const names = state.draft.map(id => DATA.species[id]?.name).filter(Boolean);
+  return `<div class="sticky"><span><b>${names.length} picked for your next batch.</b> <span style="opacity:.75">${esc(names.slice(0, 5).join(', '))}${names.length > 5 ? ', \u2026' : ''}</span></span>
+    <span style="display:flex;gap:8px"><button class="btn ghost" data-act="draft-clear">Clear</button><button class="btn primary" data-act="nav" data-v="batch">Review batch</button></span></div>`;
+}
+
+/* =========================================================
+   Panel: Batch
+   ========================================================= */
+function renderBatch() {
+  const b = currentBatch(), q = norm(ui.batchQuery);
+  const cur = b ? `<div class="box">
+      <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center;margin-bottom:12px">
+        <div><h2 style="margin:0">Current batch</h2><div class="muted small">Started ${esc(fmtTime(b.at))}, ${b.species.length} Pok\u00e9mon, ${batchFormIds().length} cards with Megas</div></div>
+        <button class="btn primary" data-act="go-train">Train this batch</button>
+      </div>
+      <div class="chips">${b.species.map(id => DATA.forms[id]).filter(Boolean).map(f => `<span class="chip">${img(f)}${esc(f.name)}</span>`).join('')}</div>
+    </div>`
+    : `<div class="empty"><h2>No batch yet</h2><p>Pick a handful of Pok\u00e9mon below, or let the quick picks choose for you, then start your first batch.</p></div>`;
+  const tiles = DATA.ranking.map(id => DATA.species[id]).filter(s => s && (!q || norm(s.name).includes(q))).map(s => {
+    const f = DATA.forms[s.id], picked = state.draft.includes(s.id), st = speciesStatus(s.id);
+    return `<button type="button" class="tile" data-act="draft-toggle" data-id="${s.id}" aria-pressed="${picked}">
+      ${st ? `<span class="tlabel">${st === 'batch' ? 'In batch' : 'Learned'}</span>` : ''}
+      <span class="tick">${tickSVG}</span>
+      ${img(f)}<span class="tn">${esc(s.name)}</span><span class="tr">#${s.rank}, base Spe ${f.base.spe}${s.megas.length ? ', has Mega' : ''}</span>
+    </button>`;
+  }).join('');
+  return `
+  <div class="panel-head"><div><h1>Batch</h1>
+    <p class="lede">Choose what you want to learn this session. Starting a batch adds its Pok\u00e9mon (and their Mega forms) to your history, so you can keep reviewing them later.</p></div></div>
+  ${cur}
+  <div class="section">
+    <h2>Next batch</h2>
+    <div class="toolbar">
+      <label class="inline">Batch size <input type="number" min="1" max="30" value="${state.settings.batchSize}" data-setting="batchSize" style="width:76px"></label>
+      <button class="btn" data-act="fill-next">Next unlearned by usage</button>
+      <button class="btn" data-act="fill-weak">Weakest from history</button>
+      <button class="btn" data-act="fill-random">Random from top 40</button>
+      <button class="btn ghost" data-act="draft-clear">Clear</button>
+    </div>
+    <div class="toolbar"><div class="grow"><input type="search" placeholder="Search Pok\u00e9mon" value="${esc(ui.batchQuery)}" data-input="batch-q" aria-label="Search Pokémon"></div></div>
+    <div class="tiles" id="batch-tiles">${tiles}</div>
+    ${state.draft.length ? `<div class="sticky"><span><b>${state.draft.length} picked.</b></span><span style="display:flex;flex-wrap:wrap;gap:8px">
+      <button class="btn ghost" data-act="draft-clear">Clear</button>
+      ${b ? '<button class="btn" data-act="batch-extend">Add to current batch</button>' : ''}
+      <button class="btn primary" data-act="batch-start">Start new batch</button></span></div>` : ''}
+  </div>`;
+}
+function fillDraft(kind) {
+  const n = clamp(+state.settings.batchSize || 6, 1, 30);
+  let ids = [];
+  if (kind === 'next') ids = DATA.ranking.filter(id => !speciesStatus(id));
+  if (kind === 'random') ids = shuffle(DATA.ranking.slice(0, 40));
+  if (kind === 'weak') {
+    const scored = {};
+    Object.keys(state.pool).forEach(fid => {
+      const f = DATA.forms[fid]; if (!f) return;
+      const a = accuracyOf(fid), sid = f.speciesId;
+      const val = a.seen ? a.acc : 0.5;
+      scored[sid] = Math.min(scored[sid] ?? 1, val - (level(fid) < 0 ? 0 : level(fid) * 0.02));
+    });
+    ids = Object.keys(scored).sort((a, b) => scored[a] - scored[b]);
+    if (!ids.length) { toast('No history yet. Train a batch first.'); return; }
+  }
+  state.draft = ids.slice(0, n);
+  persist(); render();
+}
+function startBatch(extend) {
+  if (!state.draft.length) { toast('Pick at least one Pok\u00e9mon first.'); return; }
+  const now = Date.now();
+  if (extend && currentBatch()) {
+    const b = currentBatch();
+    state.draft.forEach(id => { if (!b.species.includes(id)) b.species.push(id); });
+  } else {
+    const b = {id: 'b' + now, at: now, species: [...state.draft]};
+    state.batches.push(b); state.current = b.id;
+  }
+  state.draft.forEach(sid => {
+    const s = DATA.species[sid]; if (!s) return;
+    [sid, ...s.megas].forEach(fid => { if (!state.pool[fid]) state.pool[fid] = now; });
+  });
+  state.draft = [];
+  state.ui.panel = 'train'; state.ui.trainSource = 'batch'; state.ui.trainMode = 'study'; ui.quiz = null;
+  persist(); render(); window.scrollTo(0, 0);
+  toast(extend ? 'Added to your current batch.' : 'New batch started. Study the cards, then quiz yourself.');
+}
+
+/* =========================================================
+   Panel: Train (study + two quiz modes)
+   ========================================================= */
+function renderTrain() {
+  const src = state.ui.trainSource, mode = state.ui.trainMode, view = state.settings.statView;
+  const nb = batchFormIds().length, nh = poolFormIds().length;
+  const custom = ui.quiz && ui.quiz.source === 'custom';
+  const head = `
+  <div class="panel-head"><div><h1>Train</h1>
+    <p class="lede">${mode === 'study' ? 'Look through the cards first. Click any card for the full breakdown.' : mode === 'name' ? 'You see the stats, you name the Pok\u00e9mon.' : 'You see the Pok\u00e9mon, you give its Speed plus one other stat.'}</p></div></div>
+  <div class="trainbar">
+    <div class="cgroup"><span class="label">Cards from</span>${seg('train-source', [['batch', `Current batch (${nb})`], ['history', `History (${nh})`]], custom ? '' : src)}</div>
+    <div class="cgroup"><span class="label">Mode</span>${seg('train-mode', [['study', 'Study'], ['name', 'Name the Pok\u00e9mon'], ['recall', 'Stats from picture']], mode)}</div>
+    <div class="cgroup"><span class="label">Stats</span>${seg('stat-view', [['base', 'Base'], ['champ', 'Champions']], view)}</div>
+    <div class="cgroup"><span class="label">Bar colours</span>${seg('bar-color', [['stat', 'By stat'], ['value', 'By value']], state.settings.barColor)}</div>
+  </div>${state.settings.barColor === 'value' ? heatLegend() : ''}`;
+  const ids = sourceIds(src);
+  if (!custom && !ids.length) {
+    return head + (src === 'batch'
+      ? `<div class="empty"><h2>No batch to train yet</h2><p>Pick the Pok\u00e9mon you want to learn and start a batch. Everything you add also goes into your history.</p><button class="btn primary" data-act="nav" data-v="batch">Pick a batch</button></div>`
+      : `<div class="empty"><h2>Your history is empty</h2><p>Every Pok\u00e9mon you add to a batch lands here, so you can keep reviewing older ones.</p><button class="btn primary" data-act="nav" data-v="batch">Pick a batch</button></div>`);
+  }
+  if (mode === 'study') return head + renderStudy(ids, view);
+  return head + renderQuiz(mode, src, ids);
+}
+
+function renderStudy(ids, view) {
+  const q = norm(ui.studyQuery);
+  let forms = ids.map(id => DATA.forms[id]).filter(f => f && (!q || norm(f.name).includes(q) || f.types.some(t => norm(t) === q)));
+  const sp = f => statsOf(f, view).spe;
+  const sort = state.ui.studySort;
+  if (sort === 'spe-desc') forms.sort((a, b) => sp(b) - sp(a) || a.name.localeCompare(b.name));
+  else if (sort === 'spe-asc') forms.sort((a, b) => sp(a) - sp(b) || a.name.localeCompare(b.name));
+  else if (sort === 'name') forms.sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === 'weak') forms.sort((a, b) => level(a.id) - level(b.id) || rankOfForm(a.id) - rankOfForm(b.id));
+  else forms.sort((a, b) => rankOfForm(a.id) - rankOfForm(b.id));
+  ui.studyOrder = forms.map(f => f.id);
+  const tools = `<div class="toolbar">
+    <div class="grow"><input type="search" placeholder="Filter by name or type" value="${esc(ui.studyQuery)}" data-input="study-q" aria-label="Filter cards"></div>
+    <label class="inline">Sort <select data-input="study-sort" aria-label="Sort cards">
+      ${[['rank','Usage rank'],['spe-desc','Speed, fastest first'],['spe-asc','Speed, slowest first'],['name','Name'],['weak','Least mastered first']].map(([v, l]) => `<option value="${v}" ${sort === v ? 'selected' : ''}>${l}</option>`).join('')}
+    </select></label>
+    ${seg('study-view', [['cards', 'Cards'], ['ladder', 'Speed ladder']], state.ui.studyView)}
+  </div>`;
+  if (!forms.length) return tools + `<div class="empty"><p>No cards match that filter.</p></div>`;
+  if (state.ui.studyView === 'ladder') {
+    const groups = new Map();
+    [...forms].sort((a, b) => sp(b) - sp(a)).forEach(f => { const v = sp(f); if (!groups.has(v)) groups.set(v, []); groups.get(v).push(f); });
+    return tools + `<p class="muted small" style="margin:-4px 0 12px">${view === 'base' ? 'Base Speed' : 'Champions Speed (Lv 50, no Stat Points, neutral nature), with the max reachable Speed on each chip'}, fastest at the top. Pok\u00e9mon on the same row tie.</p>
+      <div class="ladder">${[...groups].map(([v, fs]) => `<div class="lrow"><span class="lval">${v}</span><div class="chips">${fs.map(f => `<span class="lchip" role="button" tabindex="0" data-act="open-card" data-id="${f.id}">${img(f)}${esc(f.name)}${view === 'champ' ? ` <small>max ${rangeOf(f).spe[1]}</small>` : ''}</span>`).join('')}</div></div>`).join('')}</div>`;
+  }
+  return tools + `<div class="grid">${forms.map(f => card(f, view)).join('')}</div>`;
+}
+
+/* ---------- quiz engine ---------- */
+function newQuiz(mode, source, ids) {
+  const n = clamp(+state.settings.roundLength || 20, 3, 200);
+  ui.quiz = {mode, source, view: state.settings.statView, ids: [...ids], n, i: 0, results: [], recent: [], cur: null, done: false};
+  nextQuestion();
+}
+function pickNext(q) {
+  const ids = q.ids;
+  if (ids.length === 1) return ids[0];
+  const avoid = new Set(q.recent.slice(-Math.min(3, ids.length - 1)));
+  const w = ids.map(id => {
+    if (avoid.has(id)) return 0;
+    const r = peek(id, q.mode), box = r ? r.box : 0;
+    return Math.pow(6 - box, 2) * (r && r.seen ? 1 : 1.6) * (q.results.some(x => x.id === id && x.score < 1) ? 1.4 : 1);
+  });
+  const sum = w.reduce((a, b) => a + b, 0);
+  let x = Math.random() * sum;
+  for (let i = 0; i < ids.length; i++) { x -= w[i]; if (w[i] > 0 && x <= 0) return ids[i]; }
+  return ids.find((id, i) => w[i] > 0) || ids[0];
+}
+function nextQuestion() {
+  const q = ui.quiz;
+  if (q.i >= q.n) { q.done = true; q.cur = null; return; }
+  const id = pickNext(q);
+  q.recent.push(id);
+  const f = DATA.forms[id];
+  const cur = {id, answered: false, hint: false};
+  if (q.mode === 'name' && state.settings.answerStyle === 'choice') cur.choices = makeChoices(f, q);
+  if (q.mode === 'recall') {
+    const others = ['hp','atk','def','spa','spd'];
+    cur.other = others.includes(state.settings.recallStat) ? state.settings.recallStat : others[Math.floor(Math.random() * others.length)];
+  }
+  q.cur = cur;
+}
+function makeChoices(f, q) {
+  const target = statsOf(f, q.view);
+  const dist = g => { const s = statsOf(g, q.view); return STATS.reduce((a, k) => a + Math.abs(s[k] - target[k]), 0); };
+  let pool = q.ids.filter(id => id !== f.id).map(id => DATA.forms[id]);
+  if (pool.length < 6) pool = pool.concat(Object.values(DATA.forms).filter(g => g.id !== f.id && !q.ids.includes(g.id)));
+  pool.sort((a, b) => dist(a) - dist(b));
+  const decoys = shuffle(pool.slice(0, 7)).slice(0, 3);
+  return shuffle([f.id, ...decoys.map(g => g.id)]);
+}
+function record(q, score, extra) {
+  const id = q.cur.id, now = Date.now(), k0 = dayKey();
+  q.cur.undo = {prevRec: state.cards[id]?.[q.mode] ? {...state.cards[id][q.mode]} : null, prevDay: state.days[k0] ? {...state.days[k0]} : null, k: k0, t: now};
+  const r = rec(id, q.mode);
+  r.seen++; r.score += score; r.last = now;
+  if (score >= 0.75) r.box = Math.min(5, r.box + 1);
+  else if (score < 0.5) r.box = 0;
+  const k = dayKey();
+  state.days[k] = state.days[k] || {n: 0, s: 0};
+  state.days[k].n++; state.days[k].s += score;
+  state.log.push({t: now, m: q.mode, f: id, v: q.view, s: score, ...extra});
+  if (state.log.length > 8000) state.log.splice(0, state.log.length - 8000);
+  q.results.push({id, score, t: now, ...extra});
+  q.cur.answered = true; q.cur.score = score; q.cur.extra = extra;
+  persist();
+}
+function submitName(guessText, guessId) {
+  const q = ui.quiz; if (!q || !q.cur || q.cur.answered) return;
+  const f = DATA.forms[q.cur.id];
+  const g = guessId ? DATA.forms[guessId] : findForm(guessText);
+  const typed = String(guessText || '').trim();
+  if (!g) {
+    const err = $('#qerr');
+    const msg = typed ? `\u201c${typed}\u201d isn\u2019t a Pok\u00e9mon in this app\u2019s list, so it wasn\u2019t counted. Keep typing or pick one from the suggestions.` : 'Type a name, or pick one from the suggestions.';
+    if (err) err.textContent = msg; else toast(msg);
+    $('#qguess')?.focus();
+    return;
+  }
+  const right = g && g.id === f.id;
+  const score = right ? (q.cur.hint ? 0.5 : 1) : 0;
+  q.cur.guessText = guessText;
+  record(q, score, {g: g.id, h: q.cur.hint ? 1 : 0});
+  render(); afterQuizRender();
+}
+function scoreStat(guess, truth) {
+  if (guess == null || guess === '' || isNaN(guess)) return 0;
+  const d = Math.abs(+guess - truth);
+  return d === 0 ? 1 : d <= (+state.settings.tolerance || 0) ? 0.5 : 0;
+}
+function submitRecall(speGuess, otherGuess) {
+  const q = ui.quiz; if (!q || !q.cur || q.cur.answered) return;
+  if (speGuess === '' && otherGuess === '') { toast('Enter at least one number.'); return; }
+  const f = DATA.forms[q.cur.id], st = statsOf(f, q.view), k = q.cur.other;
+  q.cur.lastInputs = [speGuess, otherGuess];
+  const s1 = scoreStat(speGuess, st.spe), s2 = scoreStat(otherGuess, st[k]);
+  record(q, (s1 + s2) / 2, {a: {spe: [speGuess === '' ? null : +speGuess, st.spe], o: [k, otherGuess === '' ? null : +otherGuess, st[k]]}});
+  render(); afterQuizRender();
+}
+function curQ() { return state.ui.panel === 'types' ? ui.tquiz : ui.quiz; }
+function undoAnswer() {
+  const q = curQ(); if (!q || !q.cur || !q.cur.answered || !q.cur.undo) return;
+  const {prevRec, prevDay, k, t} = q.cur.undo, id = q.cur.id;
+  if (prevRec) { state.cards[id] = state.cards[id] || {}; state.cards[id][q.mode] = prevRec; }
+  else if (state.cards[id]) { delete state.cards[id][q.mode]; if (!Object.keys(state.cards[id]).length) delete state.cards[id]; }
+  if (prevDay) state.days[k] = prevDay; else delete state.days[k];
+  const li = state.log.findIndex(r => r.t === t && r.f === id); if (li >= 0) state.log.splice(li, 1);
+  const ri = q.results.findIndex(r => r.t === t && r.id === id); if (ri >= 0) q.results.splice(ri, 1);
+  q.cur.answered = false; q.cur.score = undefined; q.cur.extra = undefined; q.cur.undo = null;
+  persist(); render(); afterQuizRender();
+  toast('Answer undone. It didn\u2019t count, so try again.');
+}
+/* remove one answer from history (Progress panel) and rebuild that card's record */
+function removeAnswer(t, f) {
+  const i = state.log.findIndex(r => r.t === t && r.f === f); if (i < 0) return;
+  const r = state.log[i]; state.log.splice(i, 1);
+  const k = dayKey(new Date(r.t)), d = state.days[k];
+  if (d) { d.n--; d.s -= r.s; if (d.n <= 0) delete state.days[k]; }
+  const c = state.cards[r.f]?.[r.m];
+  if (c) {
+    c.seen--; c.score -= r.s;
+    let box = 0, last = 0;
+    state.log.filter(x => x.f === r.f && x.m === r.m).forEach(x => { if (x.s >= 0.75) box = Math.min(5, box + 1); else if (x.s < 0.5) box = 0; last = x.t; });
+    c.box = box; c.last = last;
+    if (c.seen <= 0) { delete state.cards[r.f][r.m]; if (!Object.keys(state.cards[r.f]).length) delete state.cards[r.f]; }
+  }
+  [ui.quiz, ui.tquiz].forEach(q => { if (q) { const qi = q.results.findIndex(x => x.t === t && x.id === f); if (qi >= 0) q.results.splice(qi, 1); } });
+  persist(); render(); toast('Answer removed from your history.');
+}
+function quizNext() {
+  const q = curQ(); if (!q) return;
+  q.i++; if (q.kind === 'type') tNextQuestion(q); else nextQuestion(); render(); afterQuizRender();
+}
+function afterQuizRender() {
+  const q = curQ(); if (!q) return;
+  animateBars($('#main'));
+  requestAnimationFrame(() => {
+    if (q.done) return;
+    if (q.cur && q.cur.answered) { $('#qnext')?.focus(); return; }
+    if (q.mode === 'name') $('#qguess')?.focus();
+    if (q.mode === 'recall') $('#qa-spe')?.focus();
+  });
+}
+
+function renderQuiz(mode, src, ids) {
+  const q = ui.quiz;
+  const active = q && q.mode === mode && (q.source === src || q.source === 'custom');
+  if (!active) return renderQuizStart(mode, src, ids);
+  if (q.done) return renderSummary(q);
+  return mode === 'name' ? renderNameQ(q) : renderRecallQ(q);
+}
+function renderQuizStart(mode, src, ids) {
+  const s = state.settings;
+  const n = ids.length;
+  const opts = mode === 'name'
+    ? `<label class="inline">Answer by ${seg('set-answer', [['type', 'Typing the name'], ['choice', 'Picking from 4']], s.answerStyle)}</label>`
+    : `<label class="inline">Second stat ${`<select data-setting="recallStat">${[['random','Random each time'],['hp','HP'],['atk','Attack'],['def','Defense'],['spa','Sp. Atk'],['spd','Sp. Def']].map(([v,l]) => `<option value="${v}" ${s.recallStat === v ? 'selected' : ''}>${l}</option>`).join('')}</select>`}</label>
+       <label class="inline">Close enough within <input type="number" min="0" max="20" value="${s.tolerance}" data-setting="tolerance" style="width:70px"> points</label>`;
+  return `<div class="start"><div class="qcard">
+    <h2 class="qtitle">${mode === 'name' ? 'Name the Pok\u00e9mon' : 'Stats from the picture'}</h2>
+    <p class="qnote">${mode === 'name'
+      ? `A round shows ${s.roundLength} stat lines from your ${src === 'history' ? 'history' : 'current batch'} (${n} cards). Showing the types costs half the point. Cards you miss come back more often.`
+      : `A round shows ${s.roundLength} Pok\u00e9mon from your ${src === 'history' ? 'history' : 'current batch'} (${n} cards). You always give Speed plus one other stat. Exact answers score a full point, close ones half.`}
+      ${s.statView === 'champ' ? ' You\u2019re on Champions stats: Lv 50, perfect IVs, no Stat Points, neutral nature.' : ' You\u2019re on base stats.'}</p>
+    <div class="opts">${opts}<label class="inline">Round length <input type="number" min="3" max="200" value="${s.roundLength}" data-setting="roundLength" style="width:76px"></label></div>
+    <button class="btn primary" data-act="quiz-start">Start round</button>
+  </div></div>`;
+}
+function qHead(q) {
+  const done = q.results.length, sc = q.results.reduce((a, r) => a + r.score, 0);
+  return `<div class="qhead"><span>Question ${Math.min(q.i + 1, q.n)} of ${q.n}${q.source === 'custom' ? ', drill' : ''}</span>
+    <span>${done ? `Score ${pct(sc / done)}` : ''}</span>
+    <button class="btn ghost sm" data-act="quiz-end">End round</button></div>
+    <div class="qprog"><i style="width:${(q.i + (q.cur?.answered ? 1 : 0)) / q.n * 100}%"></i></div>`;
+}
+function renderNameQ(q) {
+  const f = DATA.forms[q.cur.id], st = statsOf(f, q.view), c = q.cur, ans = c.answered;
+  let answer;
+  if (state.settings.answerStyle === 'choice' && c.choices) {
+    answer = `<div class="choices">${c.choices.map((id, i) => {
+      const g = DATA.forms[id];
+      let cls = '';
+      if (ans) { if (id === f.id) cls = 'is-right'; else if (c.extra?.g === id) cls = 'is-wrong'; }
+      return `<button type="button" class="choice ${cls}" data-act="quiz-choice" data-id="${id}" ${ans ? 'disabled' : ''}><span class="key">${i + 1}</span>${esc(g.name)}</button>`;
+    }).join('')}</div>`;
+  } else {
+    answer = `<form class="answer" data-form="quiz-name" autocomplete="off">
+      <input id="qguess" type="text" list="all-names" placeholder="Type the Pok\u00e9mon\u2019s name" aria-label="Your answer" value="${esc(c.guessText || '')}" ${ans ? 'disabled' : ''} spellcheck="false">
+      ${ans ? '' : '<button class="btn primary">Check</button>'}</form>${ans ? '' : '<div class="qerr" id="qerr" role="alert"></div>'}`;
+  }
+  let fb = '';
+  if (ans) {
+    const g = c.extra?.g && DATA.forms[c.extra.g];
+    const cls = c.score >= 1 ? 'good' : c.score > 0 ? 'mid' : 'bad';
+    const title = c.score >= 1 ? 'Correct' : c.score > 0 ? 'Correct, with the type hint' : `It was ${f.name}`;
+    let wrongLine = '';
+    if (c.score === 0) {
+      if (g) { const gs = statsOf(g, q.view); wrongLine = `<div class="small" style="margin-top:6px">You said ${esc(g.name)}: ${STATS.map(k => `${SHORT[k]} ${gs[k]}`).join(', ')}.</div>`; }
+      else if (c.extra?.g) wrongLine = `<div class="small" style="margin-top:6px">\u201c${esc(c.extra.g)}\u201d didn\u2019t match any Pok\u00e9mon I know.</div>`;
+    }
+    fb = `<div class="fb ${cls}"><div class="fb-top">${img(f)}<div><div class="fb-title">${esc(title)}</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px">${pills(f.types)}<span class="small muted">${rankLabel(f)}, common set ${esc(commonSet(f))}</span></div>${wrongLine}</div></div></div>
+      <div class="qnext"><button class="btn primary" id="qnext" data-act="quiz-next">${q.i + 1 >= q.n ? 'See results' : 'Next question'}</button><span class="kbdhint">or press Enter</span><button class="btn ghost sm" data-act="quiz-undo" style="margin-left:auto" title="Ctrl+Z also works">Undo, I misclicked</button></div>`;
+  }
+  return `<div class="quiz"><div class="qcard">${qHead(q)}
+    <h2 class="qtitle">Which Pok\u00e9mon has these ${q.view === 'base' ? 'base stats' : 'Champions stats'}?</h2>
+    <p class="qnote">${q.view === 'champ' ? 'Lv 50 with perfect IVs, no Stat Points and a neutral nature.' : 'Base stats, no nature or Stat Points.'}</p>
+    ${bars(st, q.view, {big: true, form: f, range: false})}
+    <div class="qtotal"><span>Total <b>${total(st)}</b></span>
+      ${c.hint || ans ? pills(f.types) : `<button class="btn sm" data-act="quiz-hint">Show types (half point)</button>`}</div>
+    ${answer}${fb}</div></div>`;
+}
+function renderRecallQ(q) {
+  const f = DATA.forms[q.cur.id], st = statsOf(f, q.view), c = q.cur, ans = c.answered, k = c.other;
+  const showName = state.settings.nameInRecall || ans;
+  let fb = '';
+  if (ans) {
+    const a = c.extra.a;
+    const row = (label, guess, truth, isSpe) => {
+      const s = scoreStat(guess, truth), cls = s === 1 ? 'res-good' : s > 0 ? 'res-mid' : 'res-bad';
+      const diff = guess == null ? '\u2013' : (guess - truth > 0 ? '+' : '') + (guess - truth);
+      return `<tr><td${isSpe ? ' style="color:var(--spe);font-weight:700"' : ''}>${label}</td><td>${guess == null ? '\u2013' : guess}</td><td>${truth}</td><td class="${cls}">${diff}</td></tr>`;
+    };
+    const cls = c.score >= 1 ? 'good' : c.score > 0 ? 'mid' : 'bad';
+    const title = c.score >= 1 ? 'Both exact' : c.score >= 0.75 ? 'Nearly there' : c.score > 0 ? 'Partly right' : 'Not this time';
+    fb = `<div class="fb ${cls}"><div class="fb-title">${title}</div>
+      <table><thead><tr><th>Stat</th><th>You</th><th>Actual</th><th>Off by</th></tr></thead><tbody>
+      ${row('Speed', a.spe[0], a.spe[1], true)}${row(LONG[a.o[0]], a.o[1], a.o[2], false)}</tbody></table>
+      <div style="margin-top:14px">${bars(st, q.view, {animate: true, form: f})}</div>
+      <div class="small muted" style="margin-top:8px">Total ${total(st)}${q.view === 'base' ? `, Champions Speed ${statsOf(f, 'champ').spe} (${rangeOf(f).spe[0]}\u2013${rangeOf(f).spe[1]})` : `, base Speed ${f.base.spe}`}. Common set: ${esc(commonSet(f))}.</div></div>
+      <div class="qnext"><button class="btn primary" id="qnext" data-act="quiz-next">${q.i + 1 >= q.n ? 'See results' : 'Next question'}</button><span class="kbdhint">or press Enter</span><button class="btn ghost sm" data-act="quiz-undo" style="margin-left:auto" title="Ctrl+Z also works">Undo, I misclicked</button></div>`;
+  }
+  return `<div class="quiz"><div class="qcard">${qHead(q)}
+    <div class="recall">${img(f)}
+      <div>
+        <div class="prank">${rankLabel(f)}${f.isMega ? ' <span class="mega-tag">Mega</span>' : ''}</div>
+        <div class="qname">${showName ? esc(f.name) : 'Who\u2019s this?'}</div>
+        ${pills(f.types)}
+        <p class="qnote" style="margin-top:12px">${q.view === 'base' ? 'Give its base stats.' : 'Give its Champions stats: Lv 50, perfect IVs, no Stat Points, neutral nature.'}</p>
+        <form class="ask" data-form="quiz-recall" autocomplete="off">
+          <label class="is-spe">Speed<input id="qa-spe" type="number" inputmode="numeric" min="1" max="999" ${ans ? `disabled value="${c.extra.a.spe[0] ?? ''}"` : `value="${esc(c.lastInputs?.[0] ?? '')}"`}></label>
+          <label>${LONG[k]}<input id="qa-other" type="number" inputmode="numeric" min="1" max="999" ${ans ? `disabled value="${c.extra.a.o[1] ?? ''}"` : `value="${esc(c.lastInputs?.[1] ?? '')}"`}></label>
+          ${ans ? '' : '<button class="btn primary">Check</button>'}
+        </form>
+      </div>
+    </div>${fb}</div></div>`;
+}
+function renderSummary(q) {
+  const n = q.results.length;
+  if (!n) return `<div class="start"><div class="qcard"><h2 class="qtitle">Round ended</h2><p class="qnote">No answers this time.</p><button class="btn primary" data-act="quiz-start">Start a round</button></div></div>`;
+  const sc = q.results.reduce((a, r) => a + r.score, 0);
+  const perfect = q.results.filter(r => r.score >= 1).length;
+  const misses = q.results.filter(r => r.score < 1);
+  const speErr = q.mode === 'recall' ? q.results.filter(r => r.a?.spe?.[0] != null).map(r => Math.abs(r.a.spe[0] - r.a.spe[1])) : [];
+  const fourth = q.mode === 'recall'
+    ? `<div><div class="fig">${speErr.length ? (speErr.reduce((a, b) => a + b, 0) / speErr.length).toFixed(1) : '\u2013'}</div><div class="cap">Average Speed miss, in points</div></div>`
+    : `<div><div class="fig">${q.results.filter(r => r.h).length}</div><div class="cap">Type hints used</div></div>`;
+  const missList = misses.map(r => {
+    const f = DATA.forms[r.id];
+    let detail;
+    if (q.mode === 'name') { const g = r.g && DATA.forms[r.g]; detail = g ? `You said ${esc(g.name)}` : r.g ? `You typed \u201c${esc(r.g)}\u201d` : 'No answer'; if (r.score > 0) detail = 'Used the type hint'; }
+    else detail = `Speed ${r.a.spe[0] ?? '\u2013'} vs ${r.a.spe[1]}, ${SHORT[r.a.o[0]]} ${r.a.o[1] ?? '\u2013'} vs ${r.a.o[2]}`;
+    return `<div class="prow">${img(f)}<div><b>${esc(f.name)}</b><div class="small muted">${detail}</div></div><span class="r ${r.score > 0 ? 'res-mid' : 'res-bad'}">${pct(r.score)}</span></div>`;
+  }).join('');
+  return `<div class="quiz">
+    <div class="panel-head" style="margin-bottom:14px"><div><h2 class="qtitle" style="font-size:36px">Round complete</h2></div></div>
+    <div class="board">
+      <div><div class="fig">${pct(sc / n)}</div><div class="cap">Score</div></div>
+      <div><div class="fig">${n}</div><div class="cap">Questions answered</div></div>
+      <div><div class="fig">${perfect}</div><div class="cap">Full marks</div></div>
+      ${fourth}
+    </div>
+    <div class="box section" style="margin-top:16px"><h3>${misses.length ? 'To review' : 'Nothing to review, every answer was right'}</h3><div class="rows">${missList}</div></div>
+    <div class="qnext"><button class="btn primary" data-act="quiz-start">Another round</button>
+      ${misses.length ? '<button class="btn" data-act="quiz-drill-misses">Drill the misses</button>' : ''}
+      <button class="btn ghost" data-act="quiz-to-study">Back to study</button></div>
+  </div>`;
+}
+
+/* =========================================================
+   Panel: Progress
+   ========================================================= */
+function streakDays() {
+  let n = 0; const d = new Date();
+  if (!state.days[dayKey(d)]) d.setDate(d.getDate() - 1);
+  while (state.days[dayKey(d)]?.n) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function renderProgress() {
+  const log = state.log;
+  if (!log.length) return `<div class="panel-head"><div><h1>Progress</h1><p class="lede">Your training numbers show up here once you answer a few questions.</p></div></div>
+    <div class="empty"><h2>No answers yet</h2><p>Start a batch, study the cards, then run a quiz round.</p><button class="btn primary" data-act="nav" data-v="${currentBatch() ? 'train' : 'batch'}">${currentBatch() ? 'Go to training' : 'Pick a batch'}</button></div>`;
+  const all = log.reduce((a, r) => a + r.s, 0) / log.length;
+  const today = state.days[dayKey()] || {n: 0, s: 0};
+  const pool = poolFormIds();
+  const mastered = pool.filter(id => level(id) >= 4).length;
+  const byMode = m => { const L = log.filter(r => r.m === m); return L.length ? {n: L.length, acc: L.reduce((a, r) => a + r.s, 0) / L.length} : null; };
+  const nm = byMode('name'), rc = byMode('recall');
+  const recall = log.filter(r => r.m === 'recall' && r.a?.spe?.[0] != null).slice(-60);
+  const speErr = recall.length ? recall.reduce((a, r) => a + Math.abs(r.a.spe[0] - r.a.spe[1]), 0) / recall.length : null;
+  const speExact = recall.length ? recall.filter(r => r.a.spe[0] === r.a.spe[1]).length / recall.length : null;
+
+  // 14-day chart
+  const days = [];
+  for (let i = 13; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const k = dayKey(d); days.push({k, d, ...(state.days[k] || {n: 0, s: 0})}); }
+  const maxN = Math.max(10, ...days.map(d => d.n));
+  const W = 700, H = 190, pad = {l: 34, r: 44, t: 14, b: 28}, cw = (W - pad.l - pad.r) / days.length;
+  const y = n => pad.t + (H - pad.t - pad.b) * (1 - n / maxN);
+  const ya = a => pad.t + (H - pad.t - pad.b) * (1 - a);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Questions per day and accuracy over the last 14 days">`;
+  [0, .5, 1].forEach(t => { const yy = ya(t); svg += `<line x1="${pad.l}" x2="${W - pad.r}" y1="${yy}" y2="${yy}" stroke="var(--rule-2)"/><text x="${W - pad.r + 6}" y="${yy + 4}">${t * 100}%</text>`; });
+  svg += `<text x="${pad.l - 6}" y="${y(maxN) + 4}" text-anchor="end">${maxN}</text><text x="${pad.l - 6}" y="${y(0) + 4}" text-anchor="end">0</text>`;
+  days.forEach((d, i) => {
+    const x = pad.l + i * cw + cw * 0.18, w = cw * 0.64;
+    if (d.n) svg += `<rect x="${x.toFixed(1)}" y="${y(d.n).toFixed(1)}" width="${w.toFixed(1)}" height="${(y(0) - y(d.n)).toFixed(1)}" rx="3" fill="var(--rule)"><title>${d.k}: ${d.n} answers, ${pct(d.s / d.n)}</title></rect>`;
+    if (i % 2 === 1 || i === 13) svg += `<text x="${(pad.l + i * cw + cw / 2).toFixed(1)}" y="${H - 8}" text-anchor="middle">${d.d.toLocaleDateString(undefined, {month: 'numeric', day: 'numeric'})}</text>`;
+  });
+  const pts = days.map((d, i) => d.n ? [pad.l + i * cw + cw / 2, ya(d.s / d.n)] : null).filter(Boolean);
+  if (pts.length > 1) svg += `<polyline points="${pts.map(p => p.map(v => v.toFixed(1)).join(',')).join(' ')}" fill="none" stroke="var(--spe)" stroke-width="2.5" stroke-linejoin="round"/>`;
+  pts.forEach(p => { svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="var(--spe)"/>`; });
+  svg += '</svg>';
+
+  // weakest + confusions
+  const weak = pool.map(id => ({id, ...accuracyOf(id)})).filter(x => x.seen >= 2).sort((a, b) => a.acc - b.acc || b.seen - a.seen).slice(0, 8);
+  const conf = {};
+  log.filter(r => r.m === 'name' && r.s === 0 && r.g && DATA.forms[r.g] && r.g !== r.f).forEach(r => { const k = r.f + '>' + r.g; conf[k] = (conf[k] || 0) + 1; });
+  const confs = Object.entries(conf).sort((a, b) => b[1] - a[1]).slice(0, 6);
+  const levels = [-1, 0, 1, 2, 3, 4, 5].map(l => pool.filter(id => level(id) === l).length);
+  const lvlColors = ['var(--rule)', '#E06A55', '#E89A47', '#D8B53A', '#9DBE4A', '#55AE6B', 'var(--good)'];
+  const lvlNames = ['Not quizzed yet', 'Box 0', 'Box 1', 'Box 2', 'Box 3', 'Box 4', 'Mastered'];
+
+  return `<div class="panel-head"><div><h1>Progress</h1>
+    <p class="lede">Every answer is saved. Cards move up a box when you get them right and drop back to box 0 when you miss, so the quizzes keep serving what you don\u2019t know yet.</p></div></div>
+  <div class="board">
+    <div><div class="fig">${pct(all)}</div><div class="cap">Overall score across ${log.length} answers</div></div>
+    <div><div class="fig">${today.n}</div><div class="cap">Answers today${today.n ? `, ${pct(today.s / today.n)} right` : ''}</div></div>
+    <div><div class="fig">${streakDays()}<small>${streakDays() === 1 ? 'day' : 'days'}</small></div><div class="cap">Training streak</div></div>
+    <div><div class="fig">${mastered}<small>/${pool.length}</small></div><div class="cap">Cards mastered in your history</div></div>
+  </div>
+  <div class="two section">
+    <div class="box chart"><h3>Last 14 days</h3>${svg}
+      <div class="legend"><span><i style="background:var(--rule)"></i>Answers per day</span><span><i style="background:var(--spe)"></i>Score</span></div></div>
+    <div class="box"><h3>Speed recall</h3>
+      ${recall.length ? `<div class="board" style="grid-template-columns:1fr 1fr;border:0;border-radius:0">
+        <div style="padding-left:0"><div class="fig" style="color:var(--spe)">${speErr.toFixed(1)}</div><div class="cap">Average miss on Speed, last ${recall.length} answers</div></div>
+        <div><div class="fig">${pct(speExact)}</div><div class="cap">Speed answered exactly</div></div></div>` : '<p class="muted">Play a round of Stats from picture to track your Speed accuracy.</p>'}
+      <div style="margin-top:14px" class="small">
+        <div class="prow" style="grid-template-columns:1fr auto"><span>Name the Pok\u00e9mon</span><span class="r">${nm ? `${pct(nm.acc)} <span class="small muted">of ${nm.n}</span>` : '\u2013'}</span></div>
+        <div class="prow" style="grid-template-columns:1fr auto"><span>Stats from picture</span><span class="r">${rc ? `${pct(rc.acc)} <span class="small muted">of ${rc.n}</span>` : '\u2013'}</span></div>
+      </div></div>
+  </div>
+  <div class="box section"><h3>Mastery across your history</h3>
+    <div class="mbar">${levels.map((n, i) => n ? `<span style="width:${n / Math.max(1, pool.length) * 100}%;background:${lvlColors[i]}" title="${lvlNames[i]}: ${n}"></span>` : '').join('')}</div>
+    <div class="mkey">${levels.map((n, i) => `<span><i style="background:${lvlColors[i]}"></i>${lvlNames[i]}: ${n}</span>`).join('')}</div></div>
+  <div class="two section">
+    <div class="box"><h3>Needs work</h3>
+      ${weak.length ? `<div class="rows">${weak.map(w => { const f = DATA.forms[w.id]; return `<div class="prow">${img(f)}<div><b>${esc(f.name)}</b><div class="small muted">${w.seen} answers, base Spe ${f.base.spe}</div></div><span class="r ${w.acc < .5 ? 'res-bad' : w.acc < .8 ? 'res-mid' : 'res-good'}">${pct(w.acc)}</span></div>`; }).join('')}</div>
+        <div class="qnext"><button class="btn primary" data-act="drill-weak" data-v="name">Drill these by name</button><button class="btn" data-act="drill-weak" data-v="recall">Drill their stats</button></div>`
+        : '<p class="muted">Answer each card at least twice to see which ones trip you up.</p>'}</div>
+    <div class="box"><h3>Most confused</h3>
+      ${confs.length ? `<div class="rows">${confs.map(([k, n]) => { const [a, b] = k.split('>'); const fa = DATA.forms[a], fb = DATA.forms[b]; return `<div class="prow">${img(fa)}<div><b>${esc(fa.name)}</b><div class="small muted">mistaken for ${esc(fb.name)} (Spe ${statsOf(fa, 'base').spe} vs ${statsOf(fb, 'base').spe})</div></div><span class="r">${n}\u00d7</span></div>`; }).join('')}</div>`
+        : '<p class="muted">When you name the wrong Pok\u00e9mon, the pair shows up here.</p>'}</div>
+  </div>
+  ${typesProgress()}
+  <div class="box section"><h3>Recent answers</h3>
+    <p class="small muted" style="margin:-4px 0 8px">Misclicked something earlier? Remove it here and it no longer counts toward your scores or mastery.</p>
+    <div class="rows">${log.slice(-15).reverse().map(r => {
+      if (String(r.f).startsWith('t:')) {
+        const c = TCARDS[r.f]; if (!c) return '';
+        const detail = r.m === 'tname' ? (r.s >= 1 ? 'Named correctly' : `You picked ${esc(r.g)}`) : r.m === 'tmatch' ? `${TCAT[r.c]?.label || ''}${r.mi ? `, missed ${esc(r.mi.replace(/\//g, ', '))}` : ''}${r.ex ? `, extra ${esc(r.ex.replace(/\//g, ', '))}` : ''}` : `${esc(r.a)} into it: you said ${MULT_LABEL[r.g]}, it\u2019s ${MULT_LABEL[r.r]}`;
+        return `<div class="prow" style="grid-template-columns:auto minmax(0,1fr) auto auto"><span class="types">${c.types.map(t => typePill(t)).join('')}</span><div><div class="small muted">${esc(fmtTime(r.t))}, ${TMODES[r.m]}: ${detail}</div></div><span class="r ${r.s >= 1 ? 'res-good' : r.s > 0 ? 'res-mid' : 'res-bad'}">${pct(r.s)}</span><button class="btn ghost sm" data-act="remove-answer" data-t="${r.t}" data-f="${esc(r.f)}">Remove</button></div>`;
+      }
+      const f = DATA.forms[r.f]; if (!f) return '';
+      let detail;
+      if (r.m === 'name') { const g = r.g && DATA.forms[r.g]; detail = r.s >= 1 ? 'Named correctly' : r.s > 0 ? 'Named with the type hint' : g ? `You said ${esc(g.name)}` : r.g ? `You typed \u201c${esc(r.g)}\u201d` : 'No answer'; }
+      else detail = r.a ? `Speed ${r.a.spe[0] ?? '\u2013'} vs ${r.a.spe[1]}, ${SHORT[r.a.o[0]]} ${r.a.o[1] ?? '\u2013'} vs ${r.a.o[2]}` : '';
+      return `<div class="prow" style="grid-template-columns:40px minmax(0,1fr) auto auto">${img(f)}<div><b>${esc(f.name)}</b><div class="small muted">${esc(fmtTime(r.t))}, ${r.m === 'name' ? 'Name the Pok\u00e9mon' : 'Stats from picture'}, ${r.v === 'base' ? 'base' : 'Champions'}: ${detail}</div></div><span class="r ${r.s >= 1 ? 'res-good' : r.s > 0 ? 'res-mid' : 'res-bad'}">${pct(r.s)}</span><button class="btn ghost sm" data-act="remove-answer" data-t="${r.t}" data-f="${esc(r.f)}">Remove</button></div>`;
+    }).join('')}</div></div>`;
+}
+
+function typesProgress() {
+  const L = state.log.filter(r => String(r.f).startsWith('t:'));
+  if (!L.length) return `<div class="box section"><h3>Types</h3><p class="muted">Your type drills show up here once you play a round in the Types tab.</p></div>`;
+  const by = m => { const x = L.filter(r => r.m === m); return x.length ? `${pct(x.reduce((a, r) => a + r.s, 0) / x.length)} <span class="small muted">of ${x.length}</span>` : '\u2013'; };
+  const weak = Object.keys(TCARDS).map(id => ({id, ...tAccuracy(id)})).filter(x => x.seen >= 2).sort((a, b) => a.acc - b.acc || b.seen - a.seen).slice(0, 6);
+  const mult = L.filter(r => r.m === 'tmult' && r.s < 1);
+  const pairs = {}; mult.forEach(r => { const k = r.a + '>' + r.f; pairs[k] = (pairs[k] || 0) + 1; });
+  const topPairs = Object.entries(pairs).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  return `<div class="two section">
+    <div class="box"><h3>Types</h3>
+      ${Object.entries(TMODES).map(([m, l]) => `<div class="prow" style="grid-template-columns:1fr auto"><span>${l}</span><span class="r">${by(m)}</span></div>`).join('')}
+      ${topPairs.length ? `<h3 style="margin-top:16px">Multipliers you miss most</h3>${topPairs.map(([k, n]) => { const [a, id] = k.split('>'); const c = TCARDS[id]; return c ? `<div class="prow" style="grid-template-columns:auto minmax(0,1fr) auto">${typePill(a)}<span class="small muted">into ${esc(typingName(c))}, it\u2019s ${MULT_LABEL[effOn(a, c.types)]}</span><span class="r">${n}\u00d7</span></div>` : ''; }).join('')}` : ''}
+    </div>
+    <div class="box"><h3>Type cards that need work</h3>
+      ${weak.length ? `<div class="rows">${weak.map(w => { const c = TCARDS[w.id]; return `<div class="prow" style="grid-template-columns:auto minmax(0,1fr) auto"><span class="types">${c.types.map(t => typePill(t)).join('')}</span><span class="small muted">${w.seen} answers</span><span class="r ${w.acc < .5 ? 'res-bad' : w.acc < .8 ? 'res-mid' : 'res-good'}">${pct(w.acc)}</span></div>`; }).join('')}</div>
+        <div class="qnext"><button class="btn primary" data-act="tdrill-weak" data-v="tmatch">Drill their matchups</button><button class="btn" data-act="tdrill-weak" data-v="tmult">Drill multipliers</button></div>`
+        : '<p class="muted">Answer each card at least twice to see which ones trip you up.</p>'}
+    </div></div>`;
+}
+
+/* =========================================================
+   Panel: Save & settings
+   ========================================================= */
+function renderSave() {
+  const s = state.settings, m = DATA.meta;
+  const fsLine = !FS_OK
+    ? `<p>This browser can\u2019t write to a file directly, so use Download and Load. Chrome and Edge can keep a linked file updated automatically.</p>`
+    : fileLink.status === 'linked' ? `<p>Linked to <b>${esc(fileLink.handle?.name || 'your file')}</b>. Every change is written to it a moment after it happens${fileLink.lastWrite ? `, last at ${esc(fmtTime(fileLink.lastWrite))}` : ''}.</p>`
+    : fileLink.status === 'needs-permission' ? `<p>Your linked file <b>${esc(fileLink.handle?.name || '')}</b> needs permission again after a reload. Reconnect to keep it updated.</p>`
+    : `<p>Pick a file on your computer and the app keeps it updated as you train. You can open it later on another computer with Load save file.</p>`;
+  const sel = (key, opts) => `<select data-setting="${key}">${opts.map(([v, l]) => `<option value="${v}" ${String(s[key]) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  return `<div class="panel-head"><div><h1>Save and settings</h1>
+    <p class="lede">Your progress autosaves in this browser. The save file holds everything: the usage snapshot, your batches, every answer, and these settings.</p></div></div>
+  <h2>Save file</h2>
+  <div class="settings">
+    <div class="set-row"><div><div class="t">Linked save file</div>${fsLine}</div><div class="ctl">
+      ${FS_OK ? (fileLink.status === 'linked' ? '<button class="btn" data-act="save-unlink">Unlink</button>' : fileLink.status === 'needs-permission' ? '<button class="btn primary" data-act="save-reconnect">Reconnect</button><button class="btn ghost" data-act="save-unlink">Unlink</button>' : '<button class="btn primary" data-act="save-link">Link a save file</button>') : ''}</div></div>
+    <div class="set-row"><div><div class="t">Download save file</div><p>A JSON file with everything in it. Good for backups or moving to another browser.</p></div><div class="ctl"><button class="btn" data-act="save-export">Download</button></div></div>
+    <div class="set-row"><div><div class="t">Load save file</div><p>Replaces what\u2019s in this browser with the contents of a save file.</p></div><div class="ctl"><button class="btn" data-act="save-import">Load save file</button></div></div>
+  </div>
+  <h2 class="section">Training</h2>
+  <div class="settings">
+    <div class="set-row"><div><div class="t">Stats to learn</div><p>Base stats, or Champions stats: Lv 50 with perfect IVs, no Stat Points and a neutral nature (HP = base + 75, others = base + 20). Cards also show the reachable range, from no points with a hindering nature up to 32 points with a boosting nature. Quizzes always ask for the neutral value.</p></div><div class="ctl">${seg('stat-view', [['base', 'Base'], ['champ', 'Champions']], s.statView)}</div></div>
+    <div class="set-row"><div><div class="t">Bar colours</div><p>By stat gives every stat its own colour. By value colours each bar by how high the base stat is, from red for low through yellow and green to blue for very high.</p></div><div class="ctl">${seg('bar-color', [['stat', 'By stat'], ['value', 'By value']], s.barColor)}</div></div>
+    <div class="set-row"><div><div class="t">Name the Pok\u00e9mon: how you answer</div><p>Typing is harder and closer to real recall. Picking from 4 uses look-alike decoys.</p></div><div class="ctl">${seg('set-answer', [['type', 'Type the name'], ['choice', 'Pick from 4']], s.answerStyle)}</div></div>
+    <div class="set-row"><div><div class="t">Stats from picture: second stat</div><p>Speed is always asked. Choose which other stat comes with it.</p></div><div class="ctl">${sel('recallStat', [['random', 'Random'], ['hp', 'HP'], ['atk', 'Attack'], ['def', 'Defense'], ['spa', 'Sp. Atk'], ['spd', 'Sp. Def']])}</div></div>
+    <div class="set-row"><div><div class="t">Close enough</div><p>Answers within this many points get half credit. Exact answers always get full credit. Set it to 0 for exact only.</p></div><div class="ctl"><input type="number" min="0" max="20" value="${s.tolerance}" data-setting="tolerance" style="width:80px"></div></div>
+    <div class="set-row"><div><div class="t">Show the name in Stats from picture</div><p>Turn off to also test whether you recognise the Pok\u00e9mon.</p></div><div class="ctl">${seg('set-name', [['1', 'Show'], ['0', 'Hide']], s.nameInRecall ? '1' : '0')}</div></div>
+    <div class="set-row"><div><div class="t">Questions per round</div></div><div class="ctl"><input type="number" min="3" max="200" value="${s.roundLength}" data-setting="roundLength" style="width:80px"></div></div>
+    <div class="set-row"><div><div class="t">Include Mega forms</div><p>Megas get their own cards because their stats, and usually their Speed, differ from the base form.</p></div><div class="ctl">${seg('set-megas', [['1', 'Include'], ['0', 'Skip']], s.includeMegas ? '1' : '0')}</div></div>
+  </div>
+  <h2 class="section">Display</h2>
+  <div class="settings">
+    <div class="set-row"><div><div class="t">Pictures</div><p>Pictures load from public sprite sources while you\u2019re online. If one is missing, the card shows the Pok\u00e9mon\u2019s initials on its type colours.</p></div><div class="ctl">${sel('imageSource', [['artwork', 'Official artwork first'], ['showdown', 'Showdown sprites first'], ['off', 'No pictures']])}</div></div>
+    <div class="set-row"><div><div class="t">Theme</div></div><div class="ctl">${seg('set-theme', [['auto', 'Match system'], ['light', 'Light'], ['dark', 'Dark']], s.theme)}</div></div>
+  </div>
+  <h2 class="section">Usage data</h2>
+  <div class="box"><dl class="kv">
+    <dt>Ladder</dt><dd>${esc(m.title || `${m.format}, ${m.season}`)}</dd>
+    <dt>Regulation</dt><dd>${esc(m.regulation || '')}</dd>
+    <dt>Source</dt><dd>${m.sourceUrl ? `<a href="${esc(m.sourceUrl)}" target="_blank" rel="noopener">${esc(m.source)}</a>` : esc(m.source || '')}</dd>
+    <dt>Source updated</dt><dd>${esc(fmtDay(m.updated || dayKey()))}</dd>
+    <dt>Pulled</dt><dd>${esc(fmtDay(m.pulled || m.updated || dayKey()))}</dd>
+    <dt>Megas</dt><dd>${esc(m.megaRule || '')}</dd>
+    <dt>Spreads</dt><dd>Each Pok\u00e9mon uses its most common stat point spread, with the most common nature that fits that spread.</dd>
+  </dl>
+  <div class="qnext"><button class="btn" data-act="open-import">Update usage data</button><button class="btn ghost" data-act="usage-restore">Restore the built-in snapshot</button></div></div>
+  <h2 class="section">Start over</h2>
+  <div class="settings">
+    <div class="set-row"><div><div class="t">Reset training progress</div><p>Clears answers, mastery and batches. Keeps the usage data and settings.</p></div><div class="ctl"><button class="btn danger" data-act="reset-progress">Reset progress</button></div></div>
+    <div class="set-row"><div><div class="t">Reset everything</div><p>Back to a fresh install. Download your save first if you might want it back.</p></div><div class="ctl"><button class="btn danger" data-act="reset-all">Reset everything</button></div></div>
+  </div>`;
+}
+
+/* =========================================================
+   Modals
+   ========================================================= */
+function openModal(html, cls = '', kind = 'dialog') {
+  ui.modal = kind;
+  $('#modal-root').innerHTML = `<div class="modal-back" data-act="modal-back"><div class="modal ${cls}" role="dialog" aria-modal="true">
+    <button class="btn ghost sm x" data-act="close-modal" aria-label="Close">Close</button>${html}</div></div>`;
+  animateBars($('#modal-root'));
+  requestAnimationFrame(() => ($('#modal-root [data-autofocus]') || $('#modal-root .x'))?.focus());
+}
+function closeModal() { ui.modal = null; $('#modal-root').innerHTML = ''; }
+function openCard(id) {
+  const f = DATA.forms[id]; if (!f) return;
+  ui.cardId = id;
+  const base = statsOf(f, 'base'), lv = statsOf(f, 'champ');
+  const order = ui.studyOrder.includes(id) ? ui.studyOrder : [id];
+  const i = order.indexOf(id);
+  const a = accuracyOf(id), lvl = level(id);
+  const sib = (DATA.species[f.speciesId] ? [f.speciesId, ...DATA.species[f.speciesId].megas] : []).filter(x => x !== id && DATA.forms[x]);
+  openModal(`<div class="detail">${img(f)}
+    <div>
+      <div class="prank">${rankLabel(f)}${f.isMega ? ' <span class="mega-tag">Mega</span>' : ''}</div>
+      <div class="qname">${esc(f.name)}</div>${pills(f.types)}
+      <dl class="kv" style="margin-top:14px">
+        <dt>Common set</dt><dd>${esc(commonSet(f))}</dd>
+        <dt>${f.isMega ? 'Mega Stone' : 'Top item'}</dt><dd>${esc(f.item || '\u2013')}${f.stonePct ? `, held by ${f.stonePct}% of ${esc(DATA.species[f.speciesId].name)}` : ''}</dd>
+        <dt>Your record</dt><dd>${a.seen ? `${pct(a.acc)} over ${a.seen} answers, ${lvl >= 5 ? 'mastered' : 'box ' + Math.max(0, lvl)}` : 'Not quizzed yet'}</dd>
+      </dl>
+      ${sib.length ? `<div class="qnext">${sib.map(x => `<button class="btn sm" data-act="open-card" data-id="${x}">See ${esc(DATA.forms[x].name)}</button>`).join('')}</div>` : ''}
+    </div></div>
+    <div class="detail-cols">
+      <div><h3>Base stats <span class="muted small">total ${total(base)}</span></h3>${bars(base, 'base', {animate: true, form: f})}</div>
+      <div><h3>Champions stats <span class="muted small">total ${total(lv)}</span></h3>${bars(lv, 'champ', {animate: true, form: f})}
+        <p class="small muted" style="margin:8px 0 0">Solid bar: Lv 50, no Stat Points, neutral nature. Light band: from no points with a hindering nature up to 32 points with a boosting nature.</p></div>
+    </div>
+    ${order.length > 1 ? `<div class="qnext" style="justify-content:space-between"><button class="btn" data-act="open-card" data-id="${order[(i - 1 + order.length) % order.length]}">Previous</button><span class="kbdhint">${i + 1} of ${order.length}, arrow keys work too</span><button class="btn" data-act="open-card" data-id="${order[(i + 1) % order.length]}">Next</button></div>` : ''}`, '', 'card');
+}
+function openWelcome() {
+  const b = currentBatch();
+  const today = state.days[dayKey()];
+  const names = b ? b.species.map(id => DATA.forms[id]).filter(Boolean) : [];
+  openModal(`<h2 class="qtitle" style="font-size:36px">${state.lastOpen ? 'Welcome back' : 'Welcome'}</h2>
+    ${b ? `<p class="muted">Your current batch, started ${esc(fmtTime(b.at))}:</p><div class="chips" style="margin:10px 0 18px">${names.map(f => `<span class="chip">${img(f)}${esc(f.name)}</span>`).join('')}</div>
+      ${today?.n ? `<p class="small muted">${today.n} answers so far today.</p>` : ''}
+      <div class="qnext"><button class="btn primary" data-act="welcome-keep" data-autofocus>Keep training this batch</button><button class="btn" data-act="welcome-new">Pick a new batch</button></div>`
+    : `<p class="muted">This app helps you memorise the stats of the ${DATA.ranking.length} most used Pok\u00e9mon on the Champions ranked Doubles ladder, with extra focus on Speed. Start by picking a few to learn.</p>
+      <div class="qnext"><button class="btn primary" data-act="welcome-new" data-autofocus>Pick my first batch</button><button class="btn" data-act="close-modal">Look around first</button></div>`}`, 'narrow');
+}
+const REFRESH_PROMPT = () => `Please refresh the usage snapshot for my Champions Stat Trainer app.
+Pull the current top 100 Pok\u00e9mon from the Pok\u00e9mon Champions ranked ladder (Doubles) and reply with JSON only, shaped like this:
+{"meta":{"title":"...","season":"...","format":"Doubles","regulation":"...","source":"...","sourceUrl":"...","updated":"YYYY-MM-DD","pulled":"YYYY-MM-DD","megaRule":"..."},
+ "rows":[[rank,"id","Name",dexNumber,officialArtworkId,"Type1/Type2","HP/Atk/Def/SpA/SpD/Spe base stats","Nature","HP/Atk/Def/SpA/SpD/Spe stat points","Top item",[["mega-id","Mega Name",artworkIdOr0,"Types","base stats","Mega Stone",stonePercent]]]]}
+Use each Pok\u00e9mon's most common stat point spread with the most common nature that fits it, and include a Mega form when its stone is held by at least 30% of players. Current snapshot date: ${DATA.meta.updated}.`;
+function openImport() {
+  openModal(`<h2 class="qtitle">Update usage data</h2>
+    <p class="muted">Paste either a full snapshot in the app\u2019s JSON format, or just a list of names in rank order, one per line. A plain list re-ranks Pok\u00e9mon the app already knows. New names need the JSON format so their stats come along.</p>
+    <p class="small">The easiest route: copy the request below, send it to Claude, and paste the reply here.</p>
+    <div class="qnext" style="margin:6px 0 14px"><button class="btn" data-act="copy-prompt">Copy the refresh request</button></div>
+    <textarea id="import-text" placeholder="Paste JSON or a list of names" aria-label="Usage data to import" data-autofocus></textarea>
+    <div class="qnext"><button class="btn primary" data-act="import-apply">Apply</button><button class="btn ghost" data-act="close-modal">Cancel</button></div>
+    <div id="import-msg" class="small" style="margin-top:10px"></div>`, 'narrow');
+}
+function applyImport(text) {
+  const msg = t => { $('#import-msg').innerHTML = t; };
+  text = String(text || '').trim();
+  if (!text) { msg('Paste something first.'); return; }
+  let obj = null;
+  try { obj = JSON.parse(text.replace(/^```(json)?|```$/g, '').trim()); } catch (e) { /* not JSON */ }
+  const known = {};
+  [...BUILTIN.rows, ...(state.usage.extra || []), ...state.usage.rows].forEach(r => { known[r[1]] = r; });
+  let rows, meta = {...state.usage.meta}, missing = [];
+  if (obj) {
+    const list = Array.isArray(obj) ? obj : obj.rows;
+    if (!Array.isArray(list) || !list.length) { msg('That JSON has no rows.'); return; }
+    rows = list.map((r, i) => Array.isArray(r) ? r : [r.rank ?? i + 1, r.id, r.name, r.dex, r.art, Array.isArray(r.types) ? r.types.join('/') : r.types, Array.isArray(r.base) ? r.base.join('/') : r.base, r.nature, Array.isArray(r.sp) ? r.sp.join('/') : r.sp, r.item, r.megas]);
+    const bad = rows.filter(r => !r[1] || !r[2] || String(r[6]).split('/').length !== 6);
+    if (bad.length) { msg(`Some rows are missing an id, a name or six base stats (first one: ${esc(JSON.stringify(bad[0]).slice(0, 80))}).`); return; }
+    if (obj.meta) meta = {...meta, ...obj.meta};
+    else meta = {...meta, updated: dayKey(), pulled: dayKey()};
+  } else {
+    const names = text.split(/\r?\n/).map(l => l.replace(/^\s*#?\d+[.)\-:\s]+/, '').replace(/\s+\d+(\.\d+)?%.*$/, '').trim()).filter(Boolean);
+    rows = [];
+    names.forEach(n => {
+      const f = findForm(n); const sid = f ? f.speciesId : null;
+      const r = sid && known[sid];
+      if (r && !rows.some(x => x[1] === sid)) rows.push(r.map((v, i) => i === 0 ? rows.length + 1 : v));
+      else if (!r) missing.push(n);
+    });
+    if (!rows.length) { msg('None of those names matched a Pok\u00e9mon the app knows.'); return; }
+    meta = {...meta, updated: dayKey(), pulled: dayKey(), source: (meta.source || '') + ' (re-ranked from a pasted list)'};
+  }
+  rows.sort((a, b) => a[0] - b[0]);
+  const ids = new Set(rows.map(r => r[1]));
+  const extra = Object.values(known).filter(r => !ids.has(r[1]));
+  state.usage = {meta, rows, extra};
+  rebuild(); persist(); closeModal(); render();
+  toast(`Usage data updated: ${rows.length} Pok\u00e9mon${missing.length ? `, ${missing.length} name${missing.length > 1 ? 's' : ''} skipped` : ''}.`, 4000);
+  if (missing.length) setTimeout(() => toast(`Skipped: ${missing.slice(0, 6).join(', ')}${missing.length > 6 ? '\u2026' : ''}`, 5000), 4100);
+}
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast('Copied. Paste it into a chat with Claude.'); }
+  catch (e) {
+    const ta = $('#import-text');
+    if (ta) { ta.value = text; ta.select(); toast('Copy blocked by the browser. The request is in the box, select it and copy.', 4000); }
+  }
+}
+
+/* =========================================================
+   Linked save file (File System Access API, where available)
+   ========================================================= */
+const FS_OK = typeof window.showSaveFilePicker === 'function';
+const fileLink = {handle: null, status: FS_OK ? 'none' : 'unsupported', lastWrite: 0};
+const IDB = {
+  open() { return new Promise((res, rej) => { const r = indexedDB.open('champions-stat-trainer', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async get(k) { try { const db = await this.open(); return await new Promise((res, rej) => { const t = db.transaction('h').objectStore('h').get(k); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); } catch (e) { return null; } },
+  async set(k, v) { try { const db = await this.open(); await new Promise((res, rej) => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); } catch (e) { /* ignore */ } },
+  async del(k) { try { const db = await this.open(); await new Promise(res => { const t = db.transaction('h', 'readwrite'); t.objectStore('h').delete(k); t.oncomplete = res; t.onerror = res; }); } catch (e) { /* ignore */ } }
+};
+async function initFileLink() {
+  if (!FS_OK) return;
+  const h = await IDB.get('save'); if (!h) return;
+  fileLink.handle = h;
+  try { fileLink.status = (await h.queryPermission({mode: 'readwrite'})) === 'granted' ? 'linked' : 'needs-permission'; }
+  catch (e) { fileLink.status = 'needs-permission'; }
+  renderRailFoot(); if (state.ui.panel === 'save') render();
+}
+let writeTimer = null;
+function scheduleFileWrite() { if (fileLink.status !== 'linked') return; clearTimeout(writeTimer); writeTimer = setTimeout(writeFileNow, 700); }
+async function writeFileNow() {
+  if (!fileLink.handle) return;
+  try { const w = await fileLink.handle.createWritable(); await w.write(saveJSON()); await w.close(); fileLink.lastWrite = Date.now(); }
+  catch (e) { console.warn(e); fileLink.status = 'needs-permission'; renderRailFoot(); }
+}
+async function linkFile() {
+  try {
+    const h = await window.showSaveFilePicker({suggestedName: 'champions-stat-trainer-save.json', types: [{description: 'Save file', accept: {'application/json': ['.json']}}]});
+    fileLink.handle = h; fileLink.status = 'linked'; await IDB.set('save', h); await writeFileNow();
+    toast(`Linked. Progress now also saves to ${h.name}.`);
+  } catch (e) { if (e && e.name !== 'AbortError') toast('Could not link that file: ' + e.message); }
+  render();
+}
+async function reconnectFile() {
+  if (!fileLink.handle) return;
+  try {
+    if ((await fileLink.handle.requestPermission({mode: 'readwrite'})) === 'granted') { fileLink.status = 'linked'; await writeFileNow(); toast('Save file reconnected.'); }
+  } catch (e) { toast('Permission was not granted.'); }
+  render();
+}
+async function unlinkFile() { fileLink.handle = null; fileLink.status = FS_OK ? 'none' : 'unsupported'; await IDB.del('save'); render(); toast('Save file unlinked. Progress still autosaves in this browser.'); }
+function exportSave() {
+  const blob = new Blob([saveJSON()], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `champions-stat-trainer-${dayKey()}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('Save file downloaded.');
+}
+function importSaveText(text) {
+  let obj;
+  try { obj = JSON.parse(text); } catch (e) { toast('That file isn\u2019t valid JSON.'); return false; }
+  const s = obj && obj.state ? obj.state : obj;
+  if (!s || !s.settings || !s.usage) { toast('That doesn\u2019t look like a Champions Stat Trainer save file.'); return false; }
+  if (!confirm('Load this save file? It replaces the progress stored in this browser.')) return false;
+  state = migrate(s); ui.quiz = null; ui.tquiz = null; rebuild(); applyTheme(); persist(); render();
+  toast(`Save loaded: ${Object.keys(state.pool).length} cards in history, ${state.log.length} answers.`);
+  return true;
+}
+
+/* =========================================================
+   Types: chart (Gen 6+, same in Champions), cards, three drills
+   ========================================================= */
+const TYPES = ['Normal','Fire','Water','Electric','Grass','Ice','Fighting','Poison','Ground','Flying','Psychic','Bug','Rock','Ghost','Dragon','Dark','Steel','Fairy'];
+const CHART_SRC = {
+  Normal:   {se: [], nve: ['Rock','Steel'], no: ['Ghost']},
+  Fire:     {se: ['Grass','Ice','Bug','Steel'], nve: ['Fire','Water','Rock','Dragon'], no: []},
+  Water:    {se: ['Fire','Ground','Rock'], nve: ['Water','Grass','Dragon'], no: []},
+  Electric: {se: ['Water','Flying'], nve: ['Electric','Grass','Dragon'], no: ['Ground']},
+  Grass:    {se: ['Water','Ground','Rock'], nve: ['Fire','Grass','Poison','Flying','Bug','Dragon','Steel'], no: []},
+  Ice:      {se: ['Grass','Ground','Flying','Dragon'], nve: ['Fire','Water','Ice','Steel'], no: []},
+  Fighting: {se: ['Normal','Ice','Rock','Dark','Steel'], nve: ['Poison','Flying','Psychic','Bug','Fairy'], no: ['Ghost']},
+  Poison:   {se: ['Grass','Fairy'], nve: ['Poison','Ground','Rock','Ghost'], no: ['Steel']},
+  Ground:   {se: ['Fire','Electric','Poison','Rock','Steel'], nve: ['Grass','Bug'], no: ['Flying']},
+  Flying:   {se: ['Grass','Fighting','Bug'], nve: ['Electric','Rock','Steel'], no: []},
+  Psychic:  {se: ['Fighting','Poison'], nve: ['Psychic','Steel'], no: ['Dark']},
+  Bug:      {se: ['Grass','Psychic','Dark'], nve: ['Fire','Fighting','Poison','Flying','Ghost','Steel','Fairy'], no: []},
+  Rock:     {se: ['Fire','Ice','Flying','Bug'], nve: ['Fighting','Ground','Steel'], no: []},
+  Ghost:    {se: ['Psychic','Ghost'], nve: ['Dark'], no: ['Normal']},
+  Dragon:   {se: ['Dragon'], nve: ['Steel'], no: ['Fairy']},
+  Dark:     {se: ['Psychic','Ghost'], nve: ['Fighting','Dark','Fairy'], no: []},
+  Steel:    {se: ['Ice','Rock','Fairy'], nve: ['Fire','Water','Electric','Steel'], no: []},
+  Fairy:    {se: ['Fighting','Dragon','Dark'], nve: ['Fire','Poison','Steel'], no: []}
+};
+const EFF = {};
+TYPES.forEach(a => { EFF[a] = {}; TYPES.forEach(d => EFF[a][d] = 1); const s = CHART_SRC[a]; s.se.forEach(d => EFF[a][d] = 2); s.nve.forEach(d => EFF[a][d] = 0.5); s.no.forEach(d => EFF[a][d] = 0); });
+const effOn = (atk, defTypes) => defTypes.reduce((m, d) => m * EFF[atk][d], 1);
+const MULTS = [0, 0.25, 0.5, 1, 2, 4];
+const MULT_LABEL = {0: '0\u00d7', 0.25: '\u00bc\u00d7', 0.5: '\u00bd\u00d7', 1: '1\u00d7', 2: '2\u00d7', 4: '4\u00d7'};
+const TMODES = {tname: 'Name the type', tmatch: 'Matchups from type', tmult: 'Damage multiplier'};
+const TCAT = {
+  se:     {label: 'Super effective against', q: c => `Which types do ${c.types[0]} moves hit super effectively?`},
+  nve:    {label: 'Not very effective against', q: c => `Which types resist ${c.types[0]} moves?`},
+  no:     {label: 'No effect on', q: c => `Which types are immune to ${c.types[0]} moves?`},
+  weak:   {label: 'Weak to', q: c => `Which attacking types are super effective against ${typingName(c)}?`},
+  resist: {label: 'Resists', q: c => `Which attacking types does ${typingName(c)} resist?`},
+  immune: {label: 'Immune to', q: c => `Which attacking types can\u2019t hit ${typingName(c)} at all?`}
+};
+const typingName = c => c.types.join('/');
+
+let TCARDS = {};
+function buildTypeCards() {
+  const cards = {};
+  TYPES.forEach((t, i) => { const id = 't:' + norm(t); cards[id] = {id, types: [t], dual: false, mons: [], order: i}; });
+  DATA.ranking.forEach(sid => {
+    const s = DATA.species[sid]; if (!s) return;
+    [sid, ...s.megas].forEach(fid => {
+      const f = DATA.forms[fid]; if (!f) return;
+      const id = 't:' + f.types.map(norm).sort().join('-');
+      if (!cards[id]) cards[id] = {id, types: [...f.types], dual: f.types.length > 1, mons: [], order: 100 + (s.rank || 999)};
+      if (!cards[id].mons.includes(f.name)) cards[id].mons.push(f.name);
+    });
+  });
+  TCARDS = cards;
+}
+function defProfile(types) { const o = {}; TYPES.forEach(a => o[a] = effOn(a, types)); return o; }
+function cardSets(c) {
+  const dp = defProfile(c.types);
+  const s = {dp, weak: TYPES.filter(a => dp[a] > 1), resist: TYPES.filter(a => dp[a] > 0 && dp[a] < 1), immune: TYPES.filter(a => dp[a] === 0)};
+  if (!c.dual) { const t = c.types[0]; s.se = TYPES.filter(d => EFF[t][d] === 2); s.nve = TYPES.filter(d => EFF[t][d] === 0.5); s.no = TYPES.filter(d => EFF[t][d] === 0); }
+  else s.stab = TYPES.filter(d => c.types.some(t => EFF[t][d] === 2));
+  return s;
+}
+function typePool(src) {
+  const all = Object.values(TCARDS).sort((a, b) => a.order - b.order);
+  return src === 'single' ? all.filter(c => !c.dual) : src === 'dual' ? all.filter(c => c.dual) : all;
+}
+function tAccuracy(id) {
+  let seen = 0, score = 0;
+  Object.keys(TMODES).forEach(m => { const r = peek(id, m); if (r) { seen += r.seen; score += r.score; } });
+  return seen ? {seen, acc: score / seen} : {seen: 0, acc: null};
+}
+function tLevel(id) {
+  const rs = Object.keys(TMODES).map(m => peek(id, m)).filter(Boolean);
+  return rs.length ? Math.round(rs.reduce((a, r) => a + r.box, 0) / rs.length) : -1;
+}
+
+/* ---------- rendering pieces ---------- */
+function typePill(t, extra = '', big = false) {
+  const c = TYPE_COLOR[t] || '#888';
+  return `<span class="type ${big ? 'tbig' : ''}" style="--t:${c};--tc:${textOn(c)}">${esc(t)}${extra ? `<span class="x">${extra}</span>` : ''}</span>`;
+}
+function pillList(list, dp, kind) {
+  if (!list.length) return '<span class="none">None</span>';
+  return `<span class="types">${list.map(t => typePill(t, dp && kind === 'weak' && dp[t] === 4 ? '4\u00d7' : dp && kind === 'resist' && dp[t] === 0.25 ? '\u00bc' : '')).join('')}</span>`;
+}
+function trows(c, sets, keys) {
+  return keys.map(k => `<div class="trow"><span class="tl">${TCAT[k].label}</span>${pillList(sets[k], c.dual ? sets.dp : null, k)}</div>`).join('');
+}
+function profileHTML(c, sets) {
+  return `${c.dual ? '' : `<div class="tsec"><h4>Attacking with ${esc(c.types[0])} moves</h4>${trows(c, sets, ['se', 'nve', 'no'])}</div>`}
+    <div class="tsec"><h4>Defending${c.dual ? ' (4\u00d7 and \u00bc marked)' : ''}</h4>${trows(c, sets, ['weak', 'resist', 'immune'])}</div>`;
+}
+function typeCard(c) {
+  const sets = cardSets(c);
+  const lvl = tLevel(c.id);
+  return `<div class="tcard">
+    <div class="tc-head"><span class="types">${c.types.map(t => typePill(t, '', true)).join('')}</span>${lvl >= 0 ? `<span class="tc-lvl">${lvl >= 5 ? 'Mastered' : 'Box ' + lvl}</span>` : ''}</div>
+    ${c.mons.length ? `<div class="tc-mons">${c.dual ? '' : 'Pure type in the top 100: '}${esc(c.mons.slice(0, 6).join(', '))}${c.mons.length > 6 ? `, +${c.mons.length - 6} more` : ''}</div>` : ''}
+    ${profileHTML(c, sets)}
+    ${c.dual ? `<div class="tsec"><h4>Its STAB moves</h4><div class="trow"><span class="tl">Super effective against</span>${pillList(sets.stab)}</div></div>` : ''}
+  </div>`;
+}
+
+/* ---------- panel ---------- */
+function renderTypes() {
+  if (!Object.keys(TCARDS).length) buildTypeCards();
+  const src = state.ui.typesSource || 'single', mode = state.ui.typesMode || 'study';
+  const nS = typePool('single').length, nD = typePool('dual').length;
+  const custom = ui.tquiz && ui.tquiz.source === 'custom';
+  const lede = {study: 'Every type\u2019s matchups. Dual typings come from the Pok\u00e9mon in the current top 100, Megas included.',
+    tname: 'You see the matchups, you name the type.', tmatch: 'You see the type, you pick every type that fits the question.',
+    tmult: 'One attacking type into one typing: pick the damage multiplier.'}[mode];
+  const head = `<div class="panel-head"><div><h1>Types</h1><p class="lede">${lede}</p></div></div>
+  <div class="trainbar">
+    <div class="cgroup"><span class="label">Cards from</span>${seg('types-source', [['single', `Single types (${nS})`], ['dual', `Dual typings (${nD})`], ['all', `All (${nS + nD})`]], custom ? '' : src)}</div>
+    <div class="cgroup"><span class="label">Mode</span>${seg('types-mode', [['study', 'Study'], ['tname', 'Name the type'], ['tmatch', 'Matchups from type'], ['tmult', 'Damage multiplier']], mode)}</div>
+  </div>`;
+  const pool = typePool(src);
+  if (mode === 'study') return head + renderTypeStudy(pool);
+  const q = ui.tquiz;
+  const active = q && q.mode === mode && (q.source === src || q.source === 'custom');
+  if (!active) return head + `<div class="start"><div class="qcard">
+    <h2 class="qtitle">${TMODES[mode]}</h2>
+    <p class="qnote">${{tname: `Each question shows the matchups of a single type or a dual typing. Pick one type, or two for a dual typing. Any typing with exactly those matchups counts.`,
+      tmatch: `Each question asks one thing about a type: what it hits super effectively, what resists it, what it\u2019s weak to, and so on. Tap every type that fits, or None. All correct scores a full point, off by one scores half.`,
+      tmult: `Each question is one attacking type into a single type or a dual typing. Pick 0, \u00bc, \u00bd, 1, 2 or 4\u00d7 (keys 1 to 6 work too). Most questions are not neutral, so you practise the matchups that matter.`}[mode]}
+      A round has ${state.settings.roundLength} questions from ${pool.length} cards, and cards you miss come back more often.</p>
+    <div class="opts"><label class="inline">Round length <input type="number" min="3" max="200" value="${state.settings.roundLength}" data-setting="roundLength" style="width:76px"></label></div>
+    <button class="btn primary" data-act="tquiz-start">Start round</button></div></div>`;
+  if (q.done) return head + renderTSummary(q);
+  return head + renderTQuestion(q);
+}
+function renderTypeStudy(pool) {
+  const qy = norm(ui.typesQuery || '');
+  const sort = state.ui.typesSort || 'chart';
+  let cards = pool.filter(c => !qy || c.types.some(t => norm(t).includes(qy)) || c.mons.some(m => norm(m).includes(qy)));
+  const nWeak = c => cardSets(c).weak.length;
+  if (sort === 'weak') cards = [...cards].sort((a, b) => nWeak(b) - nWeak(a) || a.order - b.order);
+  if (sort === 'mastery') cards = [...cards].sort((a, b) => tLevel(a.id) - tLevel(b.id) || a.order - b.order);
+  return `<div class="toolbar">
+    <div class="grow"><input type="search" placeholder="Filter by type or Pok\u00e9mon" value="${esc(ui.typesQuery || '')}" data-input="types-q" aria-label="Filter type cards"></div>
+    <label class="inline">Sort <select data-input="types-sort" aria-label="Sort type cards">${[['chart', 'Chart order, then usage'], ['weak', 'Most weaknesses first'], ['mastery', 'Least mastered first']].map(([v, l]) => `<option value="${v}" ${sort === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+  </div>
+  <div class="grid" id="type-grid">${cards.map(typeCard).join('') || '<div class="empty"><p>No cards match that filter.</p></div>'}</div>`;
+}
+
+/* ---------- quiz engine (shares record / undo / scheduling with the Pokémon quizzes) ---------- */
+function tNewQuiz(mode, source, ids) {
+  ui.tquiz = {kind: 'type', mode, source, view: 'type', ids: [...ids], n: clamp(+state.settings.roundLength || 20, 3, 200), i: 0, results: [], recent: [], cur: null, done: false};
+  tNextQuestion(ui.tquiz);
+}
+function tNextQuestion(q) {
+  if (q.i >= q.n) { q.done = true; q.cur = null; return; }
+  const id = pickNext(q); q.recent.push(id);
+  const c = TCARDS[id], sets = cardSets(c);
+  const cur = {id, answered: false, picks: []};
+  if (q.mode === 'tmatch') {
+    const cats = c.dual ? ['weak', 'resist', 'immune'] : ['se', 'nve', 'no', 'weak', 'resist', 'immune'];
+    const w = cats.map(k => sets[k].length ? 1 : 0.3), sum = w.reduce((a, b) => a + b, 0);
+    let x = Math.random() * sum; cur.cat = cats[cats.length - 1];
+    for (let i = 0; i < cats.length; i++) { x -= w[i]; if (x <= 0) { cur.cat = cats[i]; break; } }
+  }
+  if (q.mode === 'tmult') {
+    const non = TYPES.filter(a => sets.dp[a] !== 1), neu = TYPES.filter(a => sets.dp[a] === 1);
+    const from = (Math.random() < 0.72 && non.length) || !neu.length ? non : neu;
+    cur.atk = from[Math.floor(Math.random() * from.length)];
+  }
+  q.cur = cur;
+}
+function tTogglePick(t) {
+  const q = ui.tquiz; if (!q || !q.cur || q.cur.answered) return;
+  const c = TCARDS[q.cur.id], p = q.cur.picks;
+  if (t === 'None') { q.cur.picks = p[0] === 'None' ? [] : ['None']; }
+  else {
+    const i = p.indexOf(t);
+    if (i >= 0) p.splice(i, 1);
+    else {
+      if (p[0] === 'None') p.length = 0;
+      p.push(t);
+      if (q.mode === 'tname') { const max = c.dual ? 2 : 1; while (p.length > max) p.shift(); }
+    }
+  }
+  const y = window.scrollY; render(); window.scrollTo(0, y);
+}
+function tSubmit(value) {
+  const q = ui.tquiz; if (!q || !q.cur || q.cur.answered) return;
+  const c = TCARDS[q.cur.id], sets = cardSets(c), cur = q.cur;
+  if (q.mode === 'tname') {
+    if (!cur.picks.length) { toast(c.dual ? 'Pick two types first.' : 'Pick a type first.'); return; }
+    const a = defProfile(cur.picks), b = sets.dp;
+    let same = TYPES.every(t => a[t] === b[t]);
+    if (!c.dual) same = cur.picks.length === 1 && cur.picks[0] === c.types[0];
+    record(q, same ? 1 : 0, {g: cur.picks.join('/')});
+  } else if (q.mode === 'tmatch') {
+    if (!cur.picks.length) { toast('Tap the types that fit, or None.'); return; }
+    const want = new Set(sets[cur.cat]), got = new Set(cur.picks.filter(t => t !== 'None'));
+    const missed = [...want].filter(t => !got.has(t)), extra = [...got].filter(t => !want.has(t));
+    const d = missed.length + extra.length;
+    record(q, d === 0 ? 1 : d === 1 ? 0.5 : 0, {c: cur.cat, g: cur.picks.join('/'), mi: missed.join('/'), ex: extra.join('/')});
+  } else {
+    const right = effOn(cur.atk, c.types);
+    record(q, value === right ? 1 : 0, {a: cur.atk, g: value, r: right});
+  }
+  render(); afterQuizRender();
+}
+function tPicker(q, c) {
+  const cur = q.cur, ans = cur.answered;
+  const btn = t => { const col = TYPE_COLOR[t] || '#888'; return `<button type="button" class="tpick" style="--t:${col};--tc:${textOn(col)}" data-act="tpick" data-t="${t}" aria-pressed="${cur.picks.includes(t)}" ${ans ? 'disabled' : ''}>${t}</button>`; };
+  return `<div class="tpicker">${TYPES.map(btn).join('')}${q.mode === 'tmatch' ? `<button type="button" class="tpick none" data-act="tpick" data-t="None" aria-pressed="${cur.picks.includes('None')}" ${ans ? 'disabled' : ''}>None</button>` : ''}</div>
+    ${ans ? '' : `<div class="qnext"><button class="btn primary" data-act="tquiz-check">Check</button><span class="kbdhint">${q.mode === 'tname' ? (c.dual ? 'Pick two types' : 'Pick one type') : 'Tap all that apply'}, then Enter</span></div>`}`;
+}
+function tNext(q) {
+  return `<div class="qnext"><button class="btn primary" id="qnext" data-act="quiz-next">${q.i + 1 >= q.n ? 'See results' : 'Next question'}</button><span class="kbdhint">or press Enter</span><button class="btn ghost sm" data-act="quiz-undo" style="margin-left:auto" title="Ctrl+Z also works">Undo, I misclicked</button></div>`;
+}
+function renderTQuestion(q) {
+  const c = TCARDS[q.cur.id], sets = cardSets(c), cur = q.cur, ans = cur.answered;
+  const cls = ans ? (cur.score >= 1 ? 'good' : cur.score > 0 ? 'mid' : 'bad') : '';
+  const bigTyping = `<span class="types">${c.types.map(t => typePill(t, '', true)).join('')}</span>`;
+  const mons = c.mons.length ? `<p class="qnote" style="margin:8px 0 0">${c.dual ? 'Like' : 'Pure type in the top 100:'} ${esc(c.mons.slice(0, 4).join(', '))}${c.mons.length > 4 ? ', \u2026' : ''}</p>` : '';
+  let body = '', fb = '';
+  if (q.mode === 'tname') {
+    body = `<h2 class="qtitle">Which ${c.dual ? 'dual typing' : 'type'} has these matchups?</h2>
+      <p class="qnote">${c.dual ? 'Defensive matchups of a dual typing. Pick both types.' : 'A single type, attacking and defending. Pick one type.'}</p>
+      <div class="tprofile">${profileHTML(c, sets)}</div>${tPicker(q, c)}`;
+    if (ans) fb = `<div class="fb ${cls}"><div class="fb-title">${cur.score >= 1 ? 'Correct' : `It was ${typingName(c)}`}</div>
+      <div style="margin-top:8px">${bigTyping}</div>${mons}${cur.score < 1 ? `<p class="small" style="margin:8px 0 0">You picked ${esc(cur.picks.join('/'))}.</p>` : ''}</div>${tNext(q)}`;
+  } else if (q.mode === 'tmatch') {
+    body = `<div style="margin-bottom:10px">${bigTyping}</div>${mons}
+      <h2 class="qtitle" style="margin-top:14px">${esc(TCAT[cur.cat].q(c))}</h2>
+      <p class="qnote">Tap every type that fits${c.dual && cur.cat === 'weak' ? ', 4\u00d7 weaknesses included' : c.dual && cur.cat === 'resist' ? ', \u00bc resistances included' : ''}. Choose None if nothing does.</p>${tPicker(q, c)}`;
+    if (ans) {
+      const e = cur.extra, list = s => s ? s.split('/').map(t => typePill(t)).join('') : '';
+      fb = `<div class="fb ${cls}"><div class="fb-title">${cur.score >= 1 ? 'All correct' : cur.score > 0 ? 'Off by one' : 'Not this time'}</div>
+        <div class="trow" style="border-top:0"><span class="tl">Answer</span>${pillList(sets[cur.cat], c.dual ? sets.dp : null, cur.cat)}</div>
+        ${e.mi ? `<div class="trow"><span class="tl">You missed</span><span class="types">${list(e.mi)}</span></div>` : ''}
+        ${e.ex ? `<div class="trow"><span class="tl">Shouldn\u2019t be there</span><span class="types">${list(e.ex)}</span></div>` : ''}
+        <details style="margin-top:10px"><summary class="small">Full card</summary><div class="tprofile" style="margin-top:8px">${profileHTML(c, sets)}</div></details></div>${tNext(q)}`;
+    }
+  } else {
+    const right = effOn(cur.atk, c.types);
+    body = `<div class="multq">${typePill(cur.atk, '', true)}<span class="muted">move into</span>${bigTyping}</div>${mons}
+      <h2 class="qtitle" style="margin-top:14px">How much damage does it do?</h2>
+      <div class="mchoices">${MULTS.map((m, i) => {
+        let k = '';
+        if (ans) { if (m === right) k = 'is-right'; else if (m === cur.extra.g) k = 'is-wrong'; }
+        return `<button type="button" class="choice mchoice ${k}" data-act="tmult" data-v="${m}" ${ans ? 'disabled' : ''}><span class="key">${i + 1}</span>${MULT_LABEL[m]}</button>`;
+      }).join('')}</div>`;
+    if (ans) {
+      const parts = c.types.map(t => `on ${t} is ${MULT_LABEL[EFF[cur.atk][t]]}`).join(' and ');
+      fb = `<div class="fb ${cls}"><div class="fb-title">${cur.score >= 1 ? 'Correct' : `It\u2019s ${MULT_LABEL[right]}`}</div>
+        <p style="margin:6px 0 0">${esc(cur.atk)} ${parts}${c.dual ? `, so ${MULT_LABEL[right]} in total` : ''}.</p></div>${tNext(q)}`;
+    }
+  }
+  return `<div class="quiz"><div class="qcard">${qHead(q)}${body}${fb}</div></div>`;
+}
+function renderTSummary(q) {
+  const n = q.results.length;
+  if (!n) return `<div class="start"><div class="qcard"><h2 class="qtitle">Round ended</h2><p class="qnote">No answers this time.</p><button class="btn primary" data-act="tquiz-start">Start a round</button></div></div>`;
+  const sc = q.results.reduce((a, r) => a + r.score, 0), misses = q.results.filter(r => r.score < 1);
+  const row = r => {
+    const c = TCARDS[r.id]; if (!c) return '';
+    const what = q.mode === 'tname' ? `You picked ${esc(r.g)}` : q.mode === 'tmatch' ? `${TCAT[r.c].label}${r.mi ? `, missed ${esc(r.mi.replace(/\//g, ', '))}` : ''}${r.ex ? `, extra ${esc(r.ex.replace(/\//g, ', '))}` : ''}` : `${esc(r.a)} into it: you said ${MULT_LABEL[r.g]}, it\u2019s ${MULT_LABEL[r.r]}`;
+    return `<div class="prow" style="grid-template-columns:auto minmax(0,1fr) auto"><span class="types">${c.types.map(t => typePill(t)).join('')}</span><div class="small muted">${what}</div><span class="r ${r.score > 0 ? 'res-mid' : 'res-bad'}">${pct(r.score)}</span></div>`;
+  };
+  return `<div class="quiz">
+    <h2 class="qtitle" style="font-size:36px;margin-bottom:14px">Round complete</h2>
+    <div class="board">
+      <div><div class="fig">${pct(sc / n)}</div><div class="cap">Score</div></div>
+      <div><div class="fig">${n}</div><div class="cap">Questions answered</div></div>
+      <div><div class="fig">${q.results.filter(r => r.score >= 1).length}</div><div class="cap">Full marks</div></div>
+      <div><div class="fig">${misses.length}</div><div class="cap">To review</div></div>
+    </div>
+    <div class="box section" style="margin-top:16px"><h3>${misses.length ? 'To review' : 'Nothing to review, every answer was right'}</h3><div class="rows">${misses.map(row).join('')}</div></div>
+    <div class="qnext"><button class="btn primary" data-act="tquiz-start">Another round</button>
+      ${misses.length ? '<button class="btn" data-act="tquiz-drill-misses">Drill the misses</button>' : ''}
+      <button class="btn ghost" data-act="tquiz-to-study">Back to study</button></div></div>`;
+}
+
+/* =========================================================
+   Render router
+   ========================================================= */
+function applyTheme() {
+  const t = state.settings.theme;
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+}
+function render() {
+  renderNav(); renderRailFoot();
+  const p = state.ui.panel;
+  const html = p === 'usage' ? renderUsage() : p === 'batch' ? renderBatch() : p === 'train' ? renderTrain() : p === 'types' ? renderTypes() : p === 'progress' ? renderProgress() : renderSave();
+  $('#main').innerHTML = html;
+  animateBars($('#main'));
+}
+/* re-render only a list region so search inputs keep focus */
+function renderRegion(id, html) { const el = document.getElementById(id); if (el) el.outerHTML = html; }
+
+/* =========================================================
+   Actions
+   ========================================================= */
+const ACT = {
+  nav(el) { state.ui.panel = el.dataset.v; persist(); render(); window.scrollTo(0, 0); },
+  'usage-filter'(el) { ui.usageFilter = el.dataset.v; render(); },
+  'draft-toggle'(el) {
+    const id = el.dataset.id, i = state.draft.indexOf(id);
+    if (i >= 0) state.draft.splice(i, 1); else state.draft.push(id);
+    persist(); const y = window.scrollY; render(); window.scrollTo(0, y);
+  },
+  'draft-clear'() { state.draft = []; persist(); render(); },
+  'fill-next'() { fillDraft('next'); },
+  'fill-weak'() { fillDraft('weak'); },
+  'fill-random'() { fillDraft('random'); },
+  'batch-start'() { startBatch(false); },
+  'batch-extend'() { startBatch(true); },
+  'go-train'() { state.ui.panel = 'train'; state.ui.trainSource = 'batch'; state.ui.trainMode = 'study'; persist(); render(); window.scrollTo(0, 0); },
+  'train-source'(el) { state.ui.trainSource = el.dataset.v; ui.quiz = null; persist(); render(); },
+  'train-mode'(el) { state.ui.trainMode = el.dataset.v; if (ui.quiz && ui.quiz.mode !== el.dataset.v) ui.quiz = null; persist(); render(); },
+  'stat-view'(el) { state.settings.statView = el.dataset.v; if (ui.quiz && !ui.quiz.done) ui.quiz = null; persist(); render(); },
+  'study-view'(el) { state.ui.studyView = el.dataset.v; persist(); render(); },
+  'bar-color'(el) { state.settings.barColor = el.dataset.v; persist(); render(); },
+  'open-card'(el) { openCard(el.dataset.id); },
+  'close-modal'() { closeModal(); },
+  'modal-back'(el, e) { if (e.target === el) closeModal(); },
+  'quiz-start'() {
+    const q = ui.quiz;
+    const ids = q && q.source === 'custom' && !q.done ? q.ids : sourceIds(state.ui.trainSource);
+    if (!ids.length) { toast('No cards to quiz on yet.'); return; }
+    newQuiz(state.ui.trainMode, state.ui.trainSource, ids); render(); afterQuizRender();
+  },
+  'quiz-next'() { quizNext(); },
+  'quiz-undo'() { undoAnswer(); },
+  'types-source'(el) { state.ui.typesSource = el.dataset.v; ui.tquiz = null; persist(); render(); },
+  'types-mode'(el) { state.ui.typesMode = el.dataset.v; if (ui.tquiz && ui.tquiz.mode !== el.dataset.v) ui.tquiz = null; persist(); render(); },
+  'tquiz-start'() {
+    const q = ui.tquiz;
+    const ids = q && q.source === 'custom' && !q.done ? q.ids : typePool(state.ui.typesSource || 'single').map(c => c.id);
+    tNewQuiz(state.ui.typesMode, state.ui.typesSource || 'single', ids); render(); afterQuizRender();
+  },
+  'tpick'(el) { tTogglePick(el.dataset.t); },
+  'tquiz-check'() { tSubmit(); },
+  'tmult'(el) { tSubmit(+el.dataset.v); },
+  'tquiz-drill-misses'() {
+    const ids = [...new Set(ui.tquiz.results.filter(r => r.score < 1).map(r => r.id))];
+    tNewQuiz(ui.tquiz.mode, 'custom', ids); ui.tquiz.n = Math.max(ids.length * 2, 6); render(); afterQuizRender();
+  },
+  'tquiz-to-study'() { ui.tquiz = null; state.ui.typesMode = 'study'; persist(); render(); },
+  'tdrill-weak'(el) {
+    const ids = Object.keys(TCARDS).map(id => ({id, ...tAccuracy(id)})).filter(x => x.seen >= 2).sort((a, b) => a.acc - b.acc).slice(0, 6).map(x => x.id);
+    if (!ids.length) return;
+    state.ui.panel = 'types'; state.ui.typesMode = el.dataset.v;
+    tNewQuiz(el.dataset.v, 'custom', ids); ui.tquiz.n = Math.max(ids.length * 2, 8);
+    persist(); render(); afterQuizRender(); window.scrollTo(0, 0);
+  },
+  'remove-answer'(el) { if (confirm('Remove this answer from your history?')) removeAnswer(+el.dataset.t, el.dataset.f); },
+  'quiz-hint'() { if (ui.quiz?.cur && !ui.quiz.cur.answered) { ui.quiz.cur.hint = true; render(); afterQuizRender(); } },
+  'quiz-choice'(el) { submitName('', el.dataset.id); },
+  'quiz-end'() { const q = ui.quiz; if (!q) return; q.done = true; render(); },
+  'quiz-drill-misses'() {
+    const ids = [...new Set(ui.quiz.results.filter(r => r.score < 1).map(r => r.id))];
+    const mode = ui.quiz.mode;
+    newQuiz(mode, 'custom', ids); ui.quiz.n = Math.max(ids.length * 2, 6); render(); afterQuizRender();
+  },
+  'quiz-to-study'() { ui.quiz = null; state.ui.trainMode = 'study'; persist(); render(); },
+  'drill-weak'(el) {
+    const pool = poolFormIds().map(id => ({id, ...accuracyOf(id)})).filter(x => x.seen >= 2).sort((a, b) => a.acc - b.acc).slice(0, 8).map(x => x.id);
+    if (!pool.length) return;
+    state.ui.panel = 'train'; state.ui.trainMode = el.dataset.v;
+    newQuiz(el.dataset.v, 'custom', pool); ui.quiz.n = Math.max(pool.length * 2, 8);
+    persist(); render(); afterQuizRender(); window.scrollTo(0, 0);
+  },
+  'set-answer'(el) { state.settings.answerStyle = el.dataset.v; if (ui.quiz && !ui.quiz.done) ui.quiz = null; persist(); render(); },
+  'set-name'(el) { state.settings.nameInRecall = el.dataset.v === '1'; persist(); render(); },
+  'set-megas'(el) { state.settings.includeMegas = el.dataset.v === '1'; ui.quiz = null; persist(); render(); },
+  'set-theme'(el) { state.settings.theme = el.dataset.v; applyTheme(); persist(); render(); },
+  'save-export'() { exportSave(); },
+  'save-import'() { const fi = $('#file-in'); fi.value = ''; fi.click(); },
+  'save-link'() { linkFile(); },
+  'save-reconnect'() { reconnectFile(); },
+  'save-unlink'() { unlinkFile(); },
+  'open-import'() { openImport(); },
+  'import-apply'() { applyImport($('#import-text').value); },
+  'copy-prompt'() { copyText(REFRESH_PROMPT()); },
+  'usage-restore'() {
+    if (!confirm('Replace the current usage data with the snapshot built into this app?')) return;
+    state.usage = {meta: {...BUILTIN.meta}, rows: BUILTIN.rows, extra: []}; rebuild(); persist(); render(); toast('Built-in snapshot restored.');
+  },
+  'reset-progress'() {
+    if (!confirm('Reset all training progress? Answers, mastery and batches will be cleared.')) return;
+    Object.assign(state, {batches: [], current: null, draft: [], pool: {}, cards: {}, log: [], days: {}}); ui.quiz = null; ui.tquiz = null; persist(); render(); toast('Progress reset.');
+  },
+  'reset-all'() {
+    if (!confirm('Reset everything, including settings and usage data?')) return;
+    const keepPanel = 'usage'; state = defaultState(); state.ui.panel = keepPanel; ui.quiz = null; ui.tquiz = null; rebuild(); applyTheme(); persist(); render(); toast('Everything reset.');
+  },
+  'welcome-keep'() { closeModal(); state.ui.panel = 'train'; state.ui.trainSource = 'batch'; persist(); render(); },
+  'welcome-new'() { closeModal(); state.ui.panel = 'batch'; persist(); render(); }
+};
+
+/* =========================================================
+   Events
+   ========================================================= */
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const fn = ACT[el.dataset.act];
+  if (fn) { if (el.tagName === 'A') e.preventDefault(); fn(el, e); }
+});
+document.addEventListener('submit', e => {
+  const f = e.target.closest('[data-form]'); if (!f) return;
+  e.preventDefault();
+  if (f.dataset.form === 'quiz-name') submitName($('#qguess').value);
+  if (f.dataset.form === 'quiz-recall') submitRecall($('#qa-spe').value.trim(), $('#qa-other').value.trim());
+});
+let qTimer;
+document.addEventListener('input', e => {
+  const k = e.target.dataset.input; if (!k) return;
+  const v = e.target.value;
+  clearTimeout(qTimer);
+  if (k === 'usage-q') { ui.usageQuery = v; qTimer = setTimeout(() => { const tmp = document.createElement('div'); tmp.innerHTML = renderUsage(); renderRegion('usage-list', tmp.querySelector('#usage-list').outerHTML); }, 120); }
+  if (k === 'batch-q') { ui.batchQuery = v; qTimer = setTimeout(() => { const tmp = document.createElement('div'); tmp.innerHTML = renderBatch(); renderRegion('batch-tiles', tmp.querySelector('#batch-tiles').outerHTML); }, 120); }
+  if (k === 'types-q') { ui.typesQuery = v; qTimer = setTimeout(() => { const tmp = document.createElement('div'); tmp.innerHTML = renderTypes(); const fresh = tmp.querySelector('#type-grid'); const old = $('#type-grid'); if (fresh && old) old.replaceWith(fresh); }, 120); }
+  if (k === 'study-q') { ui.studyQuery = v; qTimer = setTimeout(() => {
+    const tmp = document.createElement('div'); tmp.innerHTML = renderTrain();
+    const fresh = tmp.querySelector('.grid, .ladder, .empty:last-child'); const old = $('#main .grid, #main .ladder, #main .empty:last-child');
+    if (fresh && old) old.replaceWith(fresh); else render();
+  }, 120); }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.input === 'study-sort') { state.ui.studySort = t.value; persist(); render(); return; }
+  if (t.dataset.input === 'types-sort') { state.ui.typesSort = t.value; persist(); render(); return; }
+  const key = t.dataset.setting; if (!key) return;
+  let v = t.value;
+  if (['tolerance', 'roundLength', 'batchSize'].includes(key)) {
+    const lim = {tolerance: [0, 20], roundLength: [3, 200], batchSize: [1, 30]}[key];
+    v = clamp(Math.round(+v || 0), lim[0], lim[1]); t.value = v;
+  }
+  state.settings[key] = v;
+  if (key === 'imageSource') { persist(); render(); return; }
+  persist(); renderNav();
+});
+$('#file-in').addEventListener('change', async e => {
+  const file = e.target.files[0]; if (!file) return;
+  importSaveText(await file.text());
+});
+document.addEventListener('keydown', e => {
+  if (ui.modal === 'card' && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+    const order = ui.studyOrder; const i = order.indexOf(ui.cardId);
+    if (order.length > 1 && i >= 0) { e.preventDefault(); openCard(order[(i + (e.key === 'ArrowRight' ? 1 : -1) + order.length) % order.length]); }
+    return;
+  }
+  if (e.key === 'Escape' && ui.modal) { closeModal(); return; }
+  const tag = (e.target.tagName || '').toLowerCase();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); return; }
+  const q = curQ();
+  if (!q || ui.modal || !['train', 'types'].includes(state.ui.panel) || q.done) return;
+  if (q.cur?.answered && (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undoAnswer(); return; }
+  if (q.cur?.answered && e.key === 'Enter' && tag !== 'button') { e.preventDefault(); quizNext(); return; }
+  if (q.kind === 'type' && !q.cur?.answered && tag !== 'input') {
+    if (q.mode === 'tmult' && /^[1-6]$/.test(e.key)) { tSubmit(MULTS[+e.key - 1]); return; }
+    if (q.mode !== 'tmult' && e.key === 'Enter' && tag !== 'button') { e.preventDefault(); tSubmit(); return; }
+    return;
+  }
+  if (!q.cur?.answered && q.mode === 'name' && q.cur?.choices && /^[1-4]$/.test(e.key) && tag !== 'input') {
+    const id = q.cur.choices[+e.key - 1]; if (id) submitName('', id);
+  }
+});
+
+/* =========================================================
+   Boot
+   ========================================================= */
+rebuild();
+applyTheme();
+if (!PANELS.some(p => p.id === state.ui.panel)) state.ui.panel = 'usage';
+render();
+initFileLink();
+openWelcome();
+state.lastOpen = Date.now();
+persist();
+/* installable app: register the offline worker when served over http(s) */
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol) && document.querySelector('link[rel="manifest"]')) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(e => console.warn('Offline mode unavailable', e)));
+}
+</script>
+</body>
+</html>
